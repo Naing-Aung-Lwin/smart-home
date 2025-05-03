@@ -3,16 +3,13 @@ import { MenuService } from './menu.service';
 import { MenuController } from './menu.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Menu, MenuSchema } from './schemas/menu.schema';
-import {
-  MealPlan,
-  MealPlanSchema,
-} from 'src/meal-plan/schemas/meal-plan.schema';
+import { Curry, CurrySchema } from 'src/curry/schemas/curry.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Menu.name, schema: MenuSchema },
-      { name: MealPlan.name, schema: MealPlanSchema },
+      { name: Curry.name, schema: CurrySchema },
     ]),
   ],
   providers: [MenuService],

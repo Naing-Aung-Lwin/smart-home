@@ -1,11 +1,11 @@
-import { IsString, IsNotEmpty } from 'class-validator';
+import { IsNotEmpty, IsMongoId } from 'class-validator';
 
 export class CreateMenuDto {
-  @IsString()
+  @IsMongoId()
   @IsNotEmpty()
   meal: string;
 
-  @IsString()
+  @IsMongoId()
   @IsNotEmpty()
   vegetable: string;
 }

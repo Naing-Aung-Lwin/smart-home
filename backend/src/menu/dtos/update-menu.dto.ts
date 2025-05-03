@@ -1,11 +1,11 @@
-import { IsString, IsOptional } from 'class-validator';
+import { IsOptional, IsMongoId } from 'class-validator';
 
 export class UpdateMenuDto {
-  @IsString()
+  @IsMongoId()
   @IsOptional()
   meal?: string;
 
-  @IsString()
+  @IsMongoId()
   @IsOptional()
   vegetable?: string;
 }

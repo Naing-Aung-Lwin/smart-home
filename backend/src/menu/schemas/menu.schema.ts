@@ -1,13 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 @Schema()
 export class Menu extends Document {
-  @Prop({ required: true })
-  meal: string;
+  @Prop({ type: Types.ObjectId, ref: 'Curry', required: true })
+  meal: Types.ObjectId;
 
-  @Prop({ required: true })
-  vegetable: string;
+  @Prop({ type: Types.ObjectId, ref: 'Curry', required: true })
+  vegetable: Types.ObjectId;
 }
 
 export const MenuSchema = SchemaFactory.createForClass(Menu);
