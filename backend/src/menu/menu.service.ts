@@ -14,11 +14,15 @@ export class MenuService {
   }
 
   findAll(): Promise<Menu[]> {
-    return this.menuModel.find().exec();
+    return this.menuModel.find().populate('meal').populate('vegetable').exec();
   }
 
   async findOne(id: string): Promise<Menu | null> {
-    const result = await this.menuModel.findById(id).exec();
+    const result = await this.menuModel
+      .findById(id)
+      .populate('meal')
+      .populate('vegetable')
+      .exec();
     if (!result) {
       throw new NotFoundException(`Menu with id ${id} not found`);
     }

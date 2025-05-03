@@ -17,11 +17,23 @@ export class MealPlanService {
   }
 
   async findAll(): Promise<MealPlan[]> {
-    return this.mealPlanModel.find().exec();
+    return this.mealPlanModel
+      .find()
+      .populate({
+        path: 'menus',
+        populate: [{ path: 'meal' }, { path: 'vegetable' }],
+      })
+      .exec();
   }
 
   async findByDate(date: string): Promise<MealPlan | null> {
-    const res = await this.mealPlanModel.findOne({ date }).exec();
+    const res = await this.mealPlanModel
+      .findOne({ date })
+      .populate({
+        path: 'menus',
+        populate: [{ path: 'meal' }, { path: 'vegetable' }],
+      })
+      .exec();
     if (!res)
       throw new NotFoundException(`Meal plan with date ${date} not found`);
     return res;
