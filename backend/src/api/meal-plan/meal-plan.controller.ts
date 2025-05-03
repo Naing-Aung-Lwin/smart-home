@@ -14,6 +14,7 @@ import { MealPlan } from 'src/schemas/meal-plan.schema';
 import { CreateMealPlanDto } from 'src/dtos/meal-plan/create-meal-plan.dto';
 import { UpdateMealPlanDto } from 'src/dtos/meal-plan/update-meal-plan.dto';
 import { MealPlanIdParam } from 'src/dtos/meal-plan/meal-plan-id.param';
+import { ApiParam } from '@nestjs/swagger';
 
 @Controller('meal-plan')
 export class MealPlanController {
@@ -29,6 +30,11 @@ export class MealPlanController {
   }
 
   @Get(':date')
+  @ApiParam({
+    name: 'date',
+    type: String,
+    description: 'Date in the format YYYY-MM-DD',
+  })
   async getByDate(@Param() params: MealPlanIdParam): Promise<MealPlan> {
     try {
       const plan = await this.mealPlanService.findByDate(params.date);
@@ -49,6 +55,11 @@ export class MealPlanController {
   }
 
   @Put(':date')
+  @ApiParam({
+    name: 'date',
+    type: String,
+    description: 'Date in the format YYYY-MM-DD',
+  })
   update(
     @Param() params: MealPlanIdParam,
     @Body() updates: UpdateMealPlanDto,
@@ -61,6 +72,11 @@ export class MealPlanController {
   }
 
   @Delete(':date')
+  @ApiParam({
+    name: 'date',
+    type: String,
+    description: 'Date in the format YYYY-MM-DD',
+  })
   delete(@Param() params: MealPlanIdParam): Promise<MealPlan | null> {
     try {
       return this.mealPlanService.delete(params.date);

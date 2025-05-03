@@ -13,6 +13,7 @@ import { CreateCurryDto } from 'src/dtos/curry/create-curry.dto';
 import { Curry } from 'src/schemas/curry.schema';
 import { IdParam } from 'src/dtos/id.param';
 import { UpdateCurryDto } from 'src/dtos/curry/update-curry.dto';
+import { ApiParam } from '@nestjs/swagger';
 
 @Controller('curry')
 export class CurryController {
@@ -37,6 +38,11 @@ export class CurryController {
   }
 
   @Get(':id')
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'Curry ID (MongoDB ObjectId)',
+  })
   async findOne(@Param() params: IdParam): Promise<Curry | null> {
     try {
       return this.curryService.findOne(params.id);
@@ -46,6 +52,11 @@ export class CurryController {
   }
 
   @Put(':id')
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'Menu ID (MongoDB ObjectId)',
+  })
   async update(
     @Param() params: IdParam,
     @Body() dto: UpdateCurryDto,
@@ -58,6 +69,11 @@ export class CurryController {
   }
 
   @Delete(':id')
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'Menu ID (MongoDB ObjectId)',
+  })
   async delete(@Param() params: IdParam): Promise<Curry> {
     try {
       return this.curryService.delete(params.id);
