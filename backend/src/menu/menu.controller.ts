@@ -10,15 +10,13 @@ import {
 } from '@nestjs/common';
 import { MenuService } from './menu.service';
 import { Menu } from './schemas/menu.schema';
-import * as CONST from 'src/constants';
 import { MenuIdParam } from './dtos/menu-id.param';
 import { UpdateMenuDto } from './dtos/update-menu.dto';
+import { CreateMenuDto } from './dtos/create-menu.dto';
 
 @Controller('menu')
 export class MenuController {
   constructor(private readonly menuService: MenuService) {}
-
-  private api_name = 'menu';
 
   @Get()
   findAll(): Promise<Menu[]> {
@@ -30,54 +28,41 @@ export class MenuController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<Menu | null> {
+  findOne(@Param() params: MenuIdParam): Promise<Menu | null> {
     try {
-      return this.menuService.findOne(id);
+      return this.menuService.findOne(params.id);
     } catch (error) {
-      const msg_prefix = `${CONST.FAIL_TO_FETCH} ${this.api_name} id : ${id}}`;
-      const msg = (error as Error)?.message
-        ? msg_prefix + ' >> ' + (error as Error)?.message
-        : msg_prefix;
-      throw new BadRequestException(msg);
+      throw new BadRequestException(error);
     }
   }
 
   @Post()
-  create(@Body() body: Partial<Menu>): Promise<Menu> {
+  create(@Body() body: CreateMenuDto): Promise<Menu> {
     try {
       return this.menuService.create(body);
     } catch (error) {
-      console.error('Menu creation error:', error);
-      const msg_prefix = `${CONST.FAIL_TO_CREATE} ${this.api_name}`;
-      const msg = (error as Error)?.message
-        ? msg_prefix + ' >> ' + (error as Error)?.message
-        : msg_prefix;
-      throw new BadRequestException(msg);
+      throw new BadRequestException(error);
     }
   }
 
   @Put(':id')
   update(
-    @Param('id') id: MenuIdParam,
+    @Param() params: MenuIdParam,
     @Body() data: UpdateMenuDto,
   ): Promise<Menu | null> {
     try {
-      return this.menuService.update(id, data);
+      return this.menuService.update(params.id, data);
     } catch (error) {
       throw new BadRequestException(error);
     }
   }
 
   @Delete(':id')
-  delete(@Param('id') id: string): Promise<Menu | null> {
+  delete(@Param() params: MenuIdParam): Promise<Menu | null> {
     try {
-      return this.menuService.delete(id);
+      return this.menuService.delete(params.id);
     } catch (error) {
-      const msg_prefix = `${CONST.FAIL_TO_DELETE} ${this.api_name} id : ${id}`;
-      const msg = (error as Error)?.message
-        ? msg_prefix + ' >> ' + (error as Error)?.message
-        : msg_prefix;
-      throw new BadRequestException(msg);
+      throw new BadRequestException(error);
     }
   }
 }
