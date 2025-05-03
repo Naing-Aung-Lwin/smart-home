@@ -1,6 +1,6 @@
 import { IsMongoId } from 'class-validator';
 
-export class MenuIdParam {
+export class IdParam {
   @IsMongoId()
   id: string;
 }

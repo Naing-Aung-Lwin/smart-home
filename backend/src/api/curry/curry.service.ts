@@ -1,9 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Curry, CurryDocument } from './schemas/curry.schema';
-import { CreateCurryDto } from './dtos/create-curry.dto';
-import { UpdateCurryDto } from './dtos/update-curry.dto';
+import { Curry, CurryDocument } from 'src/schemas/curry.schema';
+import { CreateCurryDto } from 'src/dtos/curry/create-curry.dto';
+import { UpdateCurryDto } from 'src/dtos/curry/update-curry.dto';
 
 @Injectable()
 export class CurryService {

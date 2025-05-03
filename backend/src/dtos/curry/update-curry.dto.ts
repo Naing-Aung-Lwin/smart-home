@@ -1,5 +1,5 @@
 import { IsString, IsEnum, IsOptional } from 'class-validator';
-import { CurryType } from '../schemas/curry.schema';
+import { CurryType } from 'src/schemas/curry.schema';
 
 export class UpdateCurryDto {
   @IsString()

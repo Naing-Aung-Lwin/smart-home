@@ -3,9 +3,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { MenuModule } from './menu/menu.module';
-import { MealPlanModule } from './meal-plan/meal-plan.module';
-import { CurryModule } from './curry/curry.module';
+import { MenuModule } from './api/menu/menu.module';
+import { MealPlanModule } from './api/meal-plan/meal-plan.module';
+import { CurryModule } from './api/curry/curry.module';
 
 @Module({
   imports: [

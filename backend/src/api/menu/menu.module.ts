@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { MenuService } from './menu.service';
 import { MenuController } from './menu.controller';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Menu, MenuSchema } from './schemas/menu.schema';
-import { Curry, CurrySchema } from 'src/curry/schemas/curry.schema';
+import { Menu, MenuSchema } from 'src/schemas/menu.schema';
+import { Curry, CurrySchema } from 'src/schemas/curry.schema';
 
 @Module({
   imports: [

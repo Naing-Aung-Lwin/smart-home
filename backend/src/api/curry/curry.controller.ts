@@ -9,10 +9,10 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { CurryService } from './curry.service';
-import { CreateCurryDto } from './dtos/create-curry.dto';
-import { Curry } from './schemas/curry.schema';
-import { MenuIdParam } from './dtos/menu-id.param';
-import { UpdateCurryDto } from './dtos/update-curry.dto';
+import { CreateCurryDto } from 'src/dtos/curry/create-curry.dto';
+import { Curry } from 'src/schemas/curry.schema';
+import { IdParam } from 'src/dtos/id.param';
+import { UpdateCurryDto } from 'src/dtos/curry/update-curry.dto';
 
 @Controller('curry')
 export class CurryController {
@@ -37,7 +37,7 @@ export class CurryController {
   }
 
   @Get(':id')
-  async findOne(@Param() params: MenuIdParam): Promise<Curry | null> {
+  async findOne(@Param() params: IdParam): Promise<Curry | null> {
     try {
       return this.curryService.findOne(params.id);
     } catch (err) {
@@ -47,7 +47,7 @@ export class CurryController {
 
   @Put(':id')
   async update(
-    @Param() params: MenuIdParam,
+    @Param() params: IdParam,
     @Body() dto: UpdateCurryDto,
   ): Promise<Curry | null> {
     try {
@@ -58,7 +58,7 @@ export class CurryController {
   }
 
   @Delete(':id')
-  async delete(@Param() params: MenuIdParam): Promise<Curry> {
+  async delete(@Param() params: IdParam): Promise<Curry> {
     try {
       return this.curryService.delete(params.id);
     } catch (err) {

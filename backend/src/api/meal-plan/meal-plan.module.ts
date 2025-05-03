@@ -2,9 +2,9 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MealPlanController } from './meal-plan.controller';
 import { MealPlanService } from './meal-plan.service';
-import { MealPlan, MealPlanSchema } from './schemas/meal-plan.schema';
-import { Menu, MenuSchema } from 'src/menu/schemas/menu.schema';
-import { Curry, CurrySchema } from 'src/curry/schemas/curry.schema';
+import { MealPlan, MealPlanSchema } from 'src/schemas/meal-plan.schema';
+import { Menu, MenuSchema } from 'src/schemas/menu.schema';
+import { Curry, CurrySchema } from 'src/schemas/curry.schema';
 
 @Module({
   imports: [
