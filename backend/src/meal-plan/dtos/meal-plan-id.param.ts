@@ -1,6 +1,6 @@
-import { IsMongoId } from 'class-validator';
+import { IsDateString } from 'class-validator';
 
 export class MealPlanIdParam {
-  @IsMongoId()
-  id: string;
+  @IsDateString()
+  date: string;
 }
