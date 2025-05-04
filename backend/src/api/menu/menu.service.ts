@@ -37,6 +37,13 @@ export class MenuService {
   }
 
   async update(id: string, data: UpdateMenuDto): Promise<Menu | null> {
+    const existingMenu = await this.menuModel.findOne({
+      meal: data.meal,
+      vegetable: data.vegetable,
+    });
+    if (existingMenu) {
+      return existingMenu;
+    }
     const result = await this.menuModel
       .findByIdAndUpdate(id, data, { new: true })
       .exec();

@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { MealPlan } from 'src/schemas/meal-plan.schema';
 import { Curry } from 'src/schemas/curry.schema';
 import { Menu } from 'src/schemas/menu.schema';
@@ -54,12 +54,21 @@ export class MealPlanService {
         await menu.save();
       }
 
-      const plan = new this.mealPlanModel({
-        date: new Date(start),
-        menus: [menu._id],
-      });
+      const dateOnly = start.toISOString().split('T')[0];
+      let plan = await this.mealPlanModel.findOne({ date: dateOnly });
 
-      result.push(await plan.save());
+      if (plan) {
+        plan.menus = [menu._id as Types.ObjectId];
+        await plan.save();
+      } else {
+        plan = new this.mealPlanModel({
+          date: dateOnly,
+          menus: [menu._id],
+        });
+        await plan.save();
+      }
+
+      result.push(plan);
 
       start.setDate(start.getDate() + 1);
     }
