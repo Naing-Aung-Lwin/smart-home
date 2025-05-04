@@ -15,6 +15,7 @@ import { CreateMealPlanDto } from 'src/dtos/meal-plan/create-meal-plan.dto';
 import { UpdateMealPlanDto } from 'src/dtos/meal-plan/update-meal-plan.dto';
 import { MealPlanIdParam } from 'src/dtos/meal-plan/meal-plan-id.param';
 import { ApiParam } from '@nestjs/swagger';
+import { CreateMultipleMealPlanDto } from 'src/dtos/meal-plan/create-multiple-meal-plan.dto';
 
 @Controller('meal-plan')
 export class MealPlanController {
@@ -52,6 +53,11 @@ export class MealPlanController {
     } catch (error) {
       throw new BadRequestException(error);
     }
+  }
+
+  @Post('generate')
+  async generateMealPlans(@Body() dto: CreateMultipleMealPlanDto) {
+    return this.mealPlanService.createMultiple(dto);
   }
 
   @Put(':date')

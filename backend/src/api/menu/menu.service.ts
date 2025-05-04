@@ -9,7 +9,14 @@ import { CreateMenuDto } from 'src/dtos/menu/create-menu.dto';
 export class MenuService {
   constructor(@InjectModel(Menu.name) private menuModel: Model<Menu>) {}
 
-  create(data: CreateMenuDto): Promise<Menu> {
+  async create(data: CreateMenuDto): Promise<Menu> {
+    const existingMenu = await this.menuModel.findOne({
+      meal: data.meal,
+      vegetable: data.vegetable,
+    });
+    if (existingMenu) {
+      return existingMenu;
+    }
     return new this.menuModel(data).save();
   }
 
