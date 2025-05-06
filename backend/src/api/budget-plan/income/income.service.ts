@@ -7,16 +7,26 @@ import {
   UpdateIncomeDto,
 } from 'src/dtos/budget-plan/income.dto';
 import { IncomeSourceService } from 'src/api/budget-plan/income-source/income-source.service';
+import { BudgetService } from '../budget/budget.service';
 
 @Injectable()
 export class IncomeService {
   constructor(
     @InjectModel(Income.name) private incomeModel: Model<Income>,
     private incomeSourceSvc: IncomeSourceService,
+    private budgetSvc: BudgetService,
   ) {}
 
   async create(dto: CreateIncomeDto): Promise<Income> {
     const source = await this.incomeSourceSvc.create({ name: dto.source });
+    const budget = await this.budgetSvc.findById(dto.budgetId);
+    if (!budget) throw new NotFoundException('Budget not found');
+    const totalIncome = budget.totalIncome + dto.amount;
+    await this.budgetSvc.update(budget._id as string, {
+      totalIncome,
+      month: budget.month,
+      totalExpense: budget.totalExpense,
+    });
     const created = new this.incomeModel({
       ...dto,
       source: source._id,

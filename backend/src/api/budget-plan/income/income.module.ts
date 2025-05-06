@@ -8,6 +8,8 @@ import {
 import { IncomeService } from './income.service';
 import { IncomeController } from './income.controller';
 import { IncomeSourceService } from 'src/api/budget-plan/income-source/income-source.service';
+import { BudgetService } from '../budget/budget.service';
+import { Budget, BudgetSchema } from 'src/schemas/budget-plan/budget.schema';
 
 @Module({
   imports: [
@@ -17,9 +19,10 @@ import { IncomeSourceService } from 'src/api/budget-plan/income-source/income-so
         name: IncomeSource.name,
         schema: IncomeSourceSchema,
       },
+      { name: Budget.name, schema: BudgetSchema },
     ]),
   ],
-  providers: [IncomeService, IncomeSourceService],
+  providers: [IncomeService, IncomeSourceService, BudgetService],
   controllers: [IncomeController],
 })
 export class IncomeModule {}
