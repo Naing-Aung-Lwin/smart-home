@@ -8,7 +8,7 @@ import {
   Button,
   Alert,
 } from "react-native";
-import { Colors, Fonts } from "../constants/theme";
+import { Colors, Fonts } from "../../constants/theme";
 import Checkbox from "expo-checkbox";
 
 type Item = {
