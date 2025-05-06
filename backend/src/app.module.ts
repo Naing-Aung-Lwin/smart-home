@@ -11,6 +11,8 @@ import { CurryModule } from 'src/api/curry/curry.module';
 import { IncomeModule } from 'src/api/budget-plan/income/income.module';
 import { IncomeSourceModule } from 'src/api/budget-plan/income-source/income-source.module';
 import { BudgetModule } from './api/budget-plan/budget/budget.module';
+import { ExpenseCategoryModule } from './api/budget-plan/expense-category/expense-category.module';
+import { ExpenseModule } from './api/budget-plan/expense/expense.module';
 
 @Module({
   imports: [
@@ -30,6 +32,8 @@ import { BudgetModule } from './api/budget-plan/budget/budget.module';
     IncomeModule,
     IncomeSourceModule,
     BudgetModule,
+    ExpenseCategoryModule,
+    ExpenseModule,
   ],
   controllers: [AppController],
   providers: [AppService],

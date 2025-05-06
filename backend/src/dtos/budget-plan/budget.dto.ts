@@ -20,6 +20,7 @@ export class CreateBudgetDto {
   month: string;
 
   @IsNumber()
+  @IsOptional()
   @ApiProperty({
     example: '10000',
     description: 'Total income',
@@ -27,6 +28,7 @@ export class CreateBudgetDto {
   totalIncome: number;
 
   @IsNumber()
+  @IsOptional()
   @ApiProperty({
     example: '5000',
     description: 'Total expense',

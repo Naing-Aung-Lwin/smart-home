@@ -10,7 +10,10 @@ export class Expense extends Document {
   amount: number;
 
   @Prop({ required: true })
-  date: string; // format: 'YYYY-MM-DD'
+  date: string;
+
+  @Prop({ type: Types.ObjectId, ref: 'Budget', required: true })
+  budgetId: Types.ObjectId;
 }
 
 export const ExpenseSchema = SchemaFactory.createForClass(Expense);
