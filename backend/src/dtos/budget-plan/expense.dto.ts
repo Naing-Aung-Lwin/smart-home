@@ -9,10 +9,9 @@ import {
 } from 'class-validator';
 
 export class CreateExpenseDto {
-  @IsMongoId()
-  @IsNotEmpty()
+  @IsString()
   @ApiProperty({
-    example: 'Expense Category ID (MongoDB ObjectId)',
+    example: 'Food',
     description: 'Category of the expense',
   })
   category: string;
@@ -32,13 +31,19 @@ export class CreateExpenseDto {
     description: 'Date of the expense',
   })
   date: string;
+
+  @IsMongoId()
+  @ApiProperty({
+    example: 'Budget ID (MongoDB ObjectId)',
+    description: 'Budget associated with the income',
+  })
+  budgetId: string;
 }
 
 export class UpdateExpenseDto {
-  @IsMongoId()
   @IsOptional()
   @ApiProperty({
-    example: 'Expense Category ID (MongoDB ObjectId)',
+    example: 'Food',
     description: 'Category of the expense',
   })
   category: string;
@@ -58,6 +63,14 @@ export class UpdateExpenseDto {
     description: 'Date of the expense',
   })
   date: string;
+
+  @IsMongoId()
+  @IsOptional()
+  @ApiProperty({
+    example: 'Budget ID (MongoDB ObjectId)',
+    description: 'Budget associated with the income',
+  })
+  budgetId: string;
 }
 
 export class CreateExpenseCategoryDto {
