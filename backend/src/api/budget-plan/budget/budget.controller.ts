@@ -8,10 +8,12 @@ import {
   Body,
   UsePipes,
   ValidationPipe,
+  Query,
 } from '@nestjs/common';
 import { BudgetService } from './budget.service';
 import {
   CreateBudgetDto,
+  SearchBudgetDto,
   UpdateBudgetDto,
 } from 'src/dtos/budget-plan/budget.dto';
 import { IdParam } from 'src/dtos/id.param';
@@ -29,8 +31,8 @@ export class BudgetController {
   }
 
   @Get()
-  findAll() {
-    return this.service.findAll();
+  findAll(@Query() query: SearchBudgetDto) {
+    return this.service.findAll(query);
   }
 
   @Get(':id')

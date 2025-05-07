@@ -4,6 +4,7 @@ import { Budget } from 'src/schemas/budget-plan/budget.schema';
 import { Model } from 'mongoose';
 import {
   CreateBudgetDto,
+  SearchBudgetDto,
   UpdateBudgetDto,
 } from 'src/dtos/budget-plan/budget.dto';
 
@@ -16,7 +17,10 @@ export class BudgetService {
     return budget.save();
   }
 
-  findAll() {
+  findAll(query: SearchBudgetDto) {
+    if (query.month) {
+      return this.model.find({ month: query.month }).exec();
+    }
     return this.model.find().exec();
   }
 
