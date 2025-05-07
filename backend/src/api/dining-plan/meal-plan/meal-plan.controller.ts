@@ -8,6 +8,7 @@ import {
   Delete,
   NotFoundException,
   BadRequestException,
+  Query,
 } from '@nestjs/common';
 import { MealPlanService } from './meal-plan.service';
 import { MealPlan } from 'src/schemas/dining-plan/meal-plan.schema';
@@ -16,15 +17,16 @@ import { UpdateMealPlanDto } from 'src/dtos/dining-plan/meal-plan/update-meal-pl
 import { MealPlanIdParam } from 'src/dtos/dining-plan/meal-plan/meal-plan-id.param';
 import { ApiParam } from '@nestjs/swagger';
 import { CreateMultipleMealPlanDto } from 'src/dtos/dining-plan/meal-plan/create-multiple-meal-plan.dto';
+import { SearchMenuPlan } from 'src/dtos/dining-plan/meal-plan/search-menu-plan.dto';
 
 @Controller('meal-plan')
 export class MealPlanController {
   constructor(private readonly mealPlanService: MealPlanService) {}
 
   @Get()
-  getAll(): Promise<MealPlan[]> {
+  getAll(@Query() query: SearchMenuPlan): Promise<MealPlan[]> {
     try {
-      return this.mealPlanService.findAll();
+      return this.mealPlanService.findAll(query);
     } catch (error) {
       throw new BadRequestException(error);
     }

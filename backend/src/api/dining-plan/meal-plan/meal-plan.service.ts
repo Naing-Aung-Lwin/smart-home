@@ -11,6 +11,7 @@ import { Menu } from 'src/schemas/dining-plan/menu.schema';
 import { CreateMealPlanDto } from 'src/dtos/dining-plan/meal-plan/create-meal-plan.dto';
 import { UpdateMealPlanDto } from 'src/dtos/dining-plan/meal-plan/update-meal-plan.dto';
 import { CreateMultipleMealPlanDto } from 'src/dtos/dining-plan/meal-plan/create-multiple-meal-plan.dto';
+import { SearchMenuPlan } from 'src/dtos/dining-plan/meal-plan/search-menu-plan.dto';
 
 @Injectable()
 export class MealPlanService {
@@ -76,9 +77,20 @@ export class MealPlanService {
     return result;
   }
 
-  async findAll(): Promise<MealPlan[]> {
+  async findAll(query: SearchMenuPlan): Promise<MealPlan[]> {
+    const filter: { date?: string | { $gte?: string; $lte?: string } } = {};
+    if (query.fromDate || query.toDate) {
+      const dateRange: { $gte?: string; $lte?: string } = {};
+      if (query.fromDate) {
+        dateRange.$gte = query.fromDate;
+      }
+      if (query.toDate) {
+        dateRange.$lte = query.toDate;
+      }
+      filter.date = dateRange;
+    }
     return this.mealPlanModel
-      .find()
+      .find(filter)
       .populate({
         path: 'menus',
         populate: [{ path: 'meal' }, { path: 'vegetable' }],
