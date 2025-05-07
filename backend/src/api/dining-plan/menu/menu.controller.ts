@@ -9,10 +9,10 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { MenuService } from './menu.service';
-import { Menu } from 'src/schemas/menu.schema';
+import { Menu } from 'src/schemas/dining-plan/menu.schema';
 import { IdParam } from 'src/dtos/id.param';
-import { UpdateMenuDto } from 'src/dtos/menu/update-menu.dto';
-import { CreateMenuDto } from 'src/dtos/menu/create-menu.dto';
+import { UpdateMenuDto } from 'src/dtos/dining-plan/menu/update-menu.dto';
+import { CreateMenuDto } from 'src/dtos/dining-plan/menu/create-menu.dto';
 import { ApiParam, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('menu')

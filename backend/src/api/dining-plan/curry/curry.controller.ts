@@ -9,10 +9,10 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { CurryService } from './curry.service';
-import { CreateCurryDto } from 'src/dtos/curry/create-curry.dto';
-import { Curry } from 'src/schemas/curry.schema';
+import { CreateCurryDto } from 'src/dtos/dining-plan/curry/create-curry.dto';
+import { Curry } from 'src/schemas/dining-plan/curry.schema';
 import { IdParam } from 'src/dtos/id.param';
-import { UpdateCurryDto } from 'src/dtos/curry/update-curry.dto';
+import { UpdateCurryDto } from 'src/dtos/dining-plan/curry/update-curry.dto';
 import { ApiParam } from '@nestjs/swagger';
 
 @Controller('curry')

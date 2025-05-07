@@ -5,9 +5,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
-import { MenuModule } from 'src/api/menu/menu.module';
-import { MealPlanModule } from 'src/api/meal-plan/meal-plan.module';
-import { CurryModule } from 'src/api/curry/curry.module';
+import { MenuModule } from 'src/api/dining-plan/menu/menu.module';
+import { MealPlanModule } from 'src/api/dining-plan/meal-plan/meal-plan.module';
+import { CurryModule } from 'src/api/dining-plan/curry/curry.module';
 import { IncomeModule } from 'src/api/budget-plan/income/income.module';
 import { IncomeSourceModule } from 'src/api/budget-plan/income-source/income-source.module';
 import { BudgetModule } from './api/budget-plan/budget/budget.module';

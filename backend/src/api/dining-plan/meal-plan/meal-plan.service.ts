@@ -5,12 +5,12 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { MealPlan } from 'src/schemas/meal-plan.schema';
-import { Curry } from 'src/schemas/curry.schema';
-import { Menu } from 'src/schemas/menu.schema';
-import { CreateMealPlanDto } from 'src/dtos/meal-plan/create-meal-plan.dto';
-import { UpdateMealPlanDto } from 'src/dtos/meal-plan/update-meal-plan.dto';
-import { CreateMultipleMealPlanDto } from 'src/dtos/meal-plan/create-multiple-meal-plan.dto';
+import { MealPlan } from 'src/schemas/dining-plan/meal-plan.schema';
+import { Curry } from 'src/schemas/dining-plan/curry.schema';
+import { Menu } from 'src/schemas/dining-plan/menu.schema';
+import { CreateMealPlanDto } from 'src/dtos/dining-plan/meal-plan/create-meal-plan.dto';
+import { UpdateMealPlanDto } from 'src/dtos/dining-plan/meal-plan/update-meal-plan.dto';
+import { CreateMultipleMealPlanDto } from 'src/dtos/dining-plan/meal-plan/create-multiple-meal-plan.dto';
 
 @Injectable()
 export class MealPlanService {

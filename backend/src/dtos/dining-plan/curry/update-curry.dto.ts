@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsEnum, IsOptional } from 'class-validator';
-import { CurryType } from 'src/schemas/curry.schema';
+import { CurryType } from 'src/schemas/dining-plan/curry.schema';
 
 export class UpdateCurryDto {
   @IsString()

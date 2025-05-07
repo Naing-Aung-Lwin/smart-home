@@ -10,12 +10,12 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { MealPlanService } from './meal-plan.service';
-import { MealPlan } from 'src/schemas/meal-plan.schema';
-import { CreateMealPlanDto } from 'src/dtos/meal-plan/create-meal-plan.dto';
-import { UpdateMealPlanDto } from 'src/dtos/meal-plan/update-meal-plan.dto';
-import { MealPlanIdParam } from 'src/dtos/meal-plan/meal-plan-id.param';
+import { MealPlan } from 'src/schemas/dining-plan/meal-plan.schema';
+import { CreateMealPlanDto } from 'src/dtos/dining-plan/meal-plan/create-meal-plan.dto';
+import { UpdateMealPlanDto } from 'src/dtos/dining-plan/meal-plan/update-meal-plan.dto';
+import { MealPlanIdParam } from 'src/dtos/dining-plan/meal-plan/meal-plan-id.param';
 import { ApiParam } from '@nestjs/swagger';
-import { CreateMultipleMealPlanDto } from 'src/dtos/meal-plan/create-multiple-meal-plan.dto';
+import { CreateMultipleMealPlanDto } from 'src/dtos/dining-plan/meal-plan/create-multiple-meal-plan.dto';
 
 @Controller('meal-plan')
 export class MealPlanController {

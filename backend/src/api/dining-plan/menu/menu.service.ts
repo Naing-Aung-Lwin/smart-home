@@ -1,9 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Menu } from 'src/schemas/menu.schema';
+import { Menu } from 'src/schemas/dining-plan/menu.schema';
 import { Model } from 'mongoose';
-import { UpdateMenuDto } from 'src/dtos/menu/update-menu.dto';
-import { CreateMenuDto } from 'src/dtos/menu/create-menu.dto';
+import { UpdateMenuDto } from 'src/dtos/dining-plan/menu/update-menu.dto';
+import { CreateMenuDto } from 'src/dtos/dining-plan/menu/create-menu.dto';
 
 @Injectable()
 export class MenuService {
