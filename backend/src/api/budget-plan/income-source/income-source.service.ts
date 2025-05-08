@@ -17,7 +17,7 @@ export class IncomeSourceService {
     @InjectModel(IncomeSource.name) private model: Model<IncomeSource>,
   ) {}
 
-  async create(dto: CreateIncomeSourceDto) {
+  async create(dto: CreateIncomeSourceDto): Promise<IncomeSource> {
     const existing = await this.model.findOne({ name: dto.name }).exec();
     if (existing) {
       return existing;
