@@ -9,7 +9,7 @@ import { Model } from 'mongoose';
 import {
   CreateIncomeSourceDto,
   UpdateIncomeSourceDto,
-} from 'src/dtos/budget-plan/income.dto';
+} from 'src/dtos/budget-plan/income-source.dto';
 
 @Injectable()
 export class IncomeSourceService {

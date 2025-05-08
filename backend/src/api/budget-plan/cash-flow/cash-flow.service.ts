@@ -32,7 +32,7 @@ export class CashFlowService {
     }
     const budget = await this.budgetSvc.findById(dto.budgetId);
     if (!budget) throw new NotFoundException('Budget not found');
-    if (dto.categoryType === 'ExpenseCategory') {
+    if (dto.categoryType === 'IncomeSource') {
       const totalIncome = budget.totalIncome + dto.amount;
       await this.budgetSvc.update(budget._id as string, {
         totalIncome,
@@ -50,7 +50,6 @@ export class CashFlowService {
     const created = new this.cashFlowModel({
       ...dto,
       categoryId: category._id,
-      categoryType: 'IncomeSource',
     });
     return created.save();
   }
@@ -84,9 +83,12 @@ export class CashFlowService {
     const current = await this.findById(id);
 
     let category: IncomeSource | ExpenseCategory | null = null;
-    if (dto.categoryType === 'IncomeSource') {
+    const categoryType = dto.categoryType
+      ? dto.categoryType
+      : current.categoryType;
+    if (categoryType === 'IncomeSource' && dto.category) {
       category = await this.incomeSourceSvc.create({ name: dto.category });
-    } else if (dto.categoryType === 'ExpenseCategory') {
+    } else if (categoryType === 'ExpenseCategory' && dto.category) {
       category = await this.expenseCategorySvc.create({ name: dto.category });
     }
     const updateDto = category ? { ...dto, categoryId: category._id } : dto;

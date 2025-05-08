@@ -13,7 +13,7 @@ import { IncomeSourceService } from './income-source.service';
 import {
   CreateIncomeSourceDto,
   UpdateIncomeSourceDto,
-} from 'src/dtos/budget-plan/income.dto';
+} from 'src/dtos/budget-plan/income-source.dto';
 import { IdParam } from 'src/dtos/id.param';
 import { ApiTags, ApiParam } from '@nestjs/swagger';
 

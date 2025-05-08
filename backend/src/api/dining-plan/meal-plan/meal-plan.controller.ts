@@ -23,6 +23,20 @@ import { SearchMenuPlan } from 'src/dtos/dining-plan/meal-plan/search-menu-plan.
 export class MealPlanController {
   constructor(private readonly mealPlanService: MealPlanService) {}
 
+  @Post()
+  create(@Body() data: CreateMealPlanDto): Promise<MealPlan> {
+    try {
+      return this.mealPlanService.create(data);
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
+  }
+
+  @Post('generate')
+  async generateMealPlans(@Body() dto: CreateMultipleMealPlanDto) {
+    return this.mealPlanService.createMultiple(dto);
+  }
+
   @Get()
   getAll(@Query() query: SearchMenuPlan): Promise<MealPlan[]> {
     try {
@@ -46,20 +60,6 @@ export class MealPlanController {
     } catch (error) {
       throw new BadRequestException(error);
     }
-  }
-
-  @Post()
-  create(@Body() data: CreateMealPlanDto): Promise<MealPlan> {
-    try {
-      return this.mealPlanService.create(data);
-    } catch (error) {
-      throw new BadRequestException(error);
-    }
-  }
-
-  @Post('generate')
-  async generateMealPlans(@Body() dto: CreateMultipleMealPlanDto) {
-    return this.mealPlanService.createMultiple(dto);
   }
 
   @Put(':date')

@@ -18,9 +18,9 @@ import {
 } from 'src/dtos/budget-plan/cash-flow.dto';
 import { IdParam } from 'src/dtos/id.param';
 
-@ApiTags('Income')
-@Controller('income')
-export class IncomeController {
+@ApiTags('Cash Flow')
+@Controller('cash-flows')
+export class CashFlowController {
   constructor(private readonly cashFlowService: CashFlowService) {}
 
   @Post()

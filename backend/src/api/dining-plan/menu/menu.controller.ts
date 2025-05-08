@@ -20,6 +20,15 @@ import { ApiParam, ApiTags } from '@nestjs/swagger';
 export class MenuController {
   constructor(private readonly menuService: MenuService) {}
 
+  @Post()
+  create(@Body() body: CreateMenuDto): Promise<Menu> {
+    try {
+      return this.menuService.create(body);
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
+  }
+
   @Get()
   findAll(): Promise<Menu[]> {
     try {
@@ -38,15 +47,6 @@ export class MenuController {
   findOne(@Param() params: IdParam): Promise<Menu | null> {
     try {
       return this.menuService.findOne(params.id);
-    } catch (error) {
-      throw new BadRequestException(error);
-    }
-  }
-
-  @Post()
-  create(@Body() body: CreateMenuDto): Promise<Menu> {
-    try {
-      return this.menuService.create(body);
     } catch (error) {
       throw new BadRequestException(error);
     }

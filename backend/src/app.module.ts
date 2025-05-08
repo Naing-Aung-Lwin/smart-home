@@ -8,11 +8,10 @@ import { AppService } from './app.service';
 import { MenuModule } from 'src/api/dining-plan/menu/menu.module';
 import { MealPlanModule } from 'src/api/dining-plan/meal-plan/meal-plan.module';
 import { CurryModule } from 'src/api/dining-plan/curry/curry.module';
-import { IncomeModule } from 'src/api/budget-plan/income/income.module';
 import { IncomeSourceModule } from 'src/api/budget-plan/income-source/income-source.module';
 import { BudgetModule } from './api/budget-plan/budget/budget.module';
 import { ExpenseCategoryModule } from './api/budget-plan/expense-category/expense-category.module';
-import { ExpenseModule } from './api/budget-plan/expense/expense.module';
+import { CashFlowModule } from './api/budget-plan/cash-flow/cash-flow.module';
 
 @Module({
   imports: [
@@ -26,14 +25,13 @@ import { ExpenseModule } from './api/budget-plan/expense/expense.module';
       }),
       inject: [ConfigService],
     }),
+    CurryModule,
     MenuModule,
     MealPlanModule,
-    CurryModule,
-    IncomeModule,
-    IncomeSourceModule,
     BudgetModule,
+    CashFlowModule,
+    IncomeSourceModule,
     ExpenseCategoryModule,
-    ExpenseModule,
   ],
   controllers: [AppController],
   providers: [AppService],
