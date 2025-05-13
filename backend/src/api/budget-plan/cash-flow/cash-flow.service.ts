@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { FilterQuery, Model, Types } from 'mongoose';
 import { CashFlow } from 'src/schemas/budget-plan/cash-flow.schema';
 import {
   CreateCashFlowDto,
+  FilterCashFlowDto,
   UpdateCashFlowDto,
 } from 'src/dtos/budget-plan/cash-flow.dto';
 import { IncomeSourceService } from 'src/api/budget-plan/income-source/income-source.service';
@@ -54,8 +55,46 @@ export class CashFlowService {
     return created.save();
   }
 
-  async findAll(): Promise<CashFlow[]> {
-    const cashFlows = await this.cashFlowModel.find().lean();
+  async findAll(filter: FilterCashFlowDto): Promise<CashFlow[]> {
+    const query: FilterQuery<CashFlow> = {};
+
+    if (filter.categoryId) {
+      query.categoryId = new Types.ObjectId(filter.categoryId);
+    }
+
+    if (filter.categoryType) {
+      query.categoryType = filter.categoryType;
+    }
+
+    if (filter.budgetId) {
+      query.budgetId = filter.budgetId;
+    }
+
+    if (filter.minAmount !== undefined || filter.maxAmount !== undefined) {
+      const amount: { $gte?: number; $lte?: number } = {};
+      if (filter.minAmount !== undefined) {
+        amount.$gte = filter.minAmount;
+      }
+      if (filter.maxAmount !== undefined) {
+        amount.$lte = filter.maxAmount;
+      }
+      query.amount = amount;
+    }
+
+    if (filter.startDate || filter.endDate) {
+      const date: { $gte?: string; $lte?: string } = {};
+      if (filter.startDate) {
+        date.$gte = filter.startDate;
+      }
+      if (filter.endDate) {
+        date.$lte = filter.endDate;
+      }
+      query.date = date;
+    }
+    const cashFlows = await this.cashFlowModel
+      .find(query)
+      .sort({ createdAt: -1 })
+      .lean();
 
     const populatedCashFlows = await Promise.all(
       cashFlows.map(async (tx) => {

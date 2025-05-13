@@ -8,12 +8,14 @@ import {
   Body,
   UsePipes,
   ValidationPipe,
+  Query,
 } from '@nestjs/common';
 import { ApiTags, ApiParam } from '@nestjs/swagger';
 
 import { CashFlowService } from './cash-flow.service';
 import {
   CreateCashFlowDto,
+  FilterCashFlowDto,
   UpdateCashFlowDto,
 } from 'src/dtos/budget-plan/cash-flow.dto';
 import { IdParam } from 'src/dtos/id.param';
@@ -30,8 +32,8 @@ export class CashFlowController {
   }
 
   @Get()
-  findAll() {
-    return this.cashFlowService.findAll();
+  findAll(@Query() query: FilterCashFlowDto) {
+    return this.cashFlowService.findAll(query);
   }
 
   @Get(':id')
