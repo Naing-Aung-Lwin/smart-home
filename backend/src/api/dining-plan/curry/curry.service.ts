@@ -1,15 +1,21 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model } from 'mongoose';
 import { Curry, CurryDocument } from 'src/schemas/dining-plan/curry.schema';
 import { CreateCurryDto } from 'src/dtos/dining-plan/curry/create-curry.dto';
 import { UpdateCurryDto } from 'src/dtos/dining-plan/curry/update-curry.dto';
 import { SearchCurry } from 'src/dtos/dining-plan/curry/search-curry.dto';
+import { Menu } from 'src/schemas/dining-plan/menu.schema';
 
 @Injectable()
 export class CurryService {
   constructor(
     @InjectModel(Curry.name) private curryModel: Model<CurryDocument>,
+    @InjectModel(Menu.name) private menuModel: Model<Menu>,
   ) {}
 
   async create(dto: CreateCurryDto): Promise<Curry> {
@@ -47,6 +53,14 @@ export class CurryService {
   }
 
   async delete(id: string): Promise<Curry> {
+    const existingMenu = await this.menuModel.find({
+      $or: [{ meal: id }, { vegetable: id }],
+    });
+    if (existingMenu.length > 0) {
+      throw new BadRequestException(
+        `Can't delete curry, because it's already use in menu`,
+      );
+    }
     const result = await this.curryModel.findByIdAndDelete(id).exec();
     if (!result) {
       throw new NotFoundException(`Curry with id ${id} not found`);
