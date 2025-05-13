@@ -73,8 +73,8 @@ const HomePage: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 30,
     paddingHorizontal: 16,
+    marginTop: 100,
   },
   title: {
     fontSize: Fonts.size.title,
@@ -94,10 +94,6 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
     alignItems: "center",
     elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 1, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
   },
   cardText: {
     marginTop: 12,

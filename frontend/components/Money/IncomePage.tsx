@@ -99,10 +99,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     padding: 16,
     marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
     elevation: 4,
   },
   input: {
@@ -143,10 +139,6 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 10,
     borderRadius: 12,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 4,
     elevation: 2,
   },
   incomeDescription: {

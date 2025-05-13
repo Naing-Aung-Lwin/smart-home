@@ -11,10 +11,10 @@ export const Colors = {
 
 export const Fonts = {
   size: {
-    header: 20,
-    title: 16,
-    subTitle: 14,
-    text: 12,
-    button: 14,
+    header: 24,
+    title: 20,
+    subTitle: 18,
+    text: 15,
+    button: 16,
   },
 };

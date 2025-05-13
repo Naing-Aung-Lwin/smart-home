@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -6,10 +6,12 @@ import {
   Button,
   StyleSheet,
   ActivityIndicator,
+  TouchableOpacity,
 } from "react-native";
 import { Colors, Fonts } from "../../constants/theme";
 import api from "../../api/axios";
 import commonMixin from "../../composable/common";
+import ChooseMealBox from "./ChooseMealBox";
 
 interface Curry {
   type: string;
@@ -28,17 +30,13 @@ interface MeanPlan {
   menus: Menu[];
 }
 
-interface DayPlan {
-  _id: string;
-  date: string;
-  menus: string[];
-}
-
 export default function WeeklyMenuScreen() {
   const { getDayAndCurrentTime } = commonMixin();
-  const [menu, setMenu] = useState<MeanPlan[]>([]);
-  const [weeklyMenu, setWeeklyMenu] = useState<DayPlan[]>([]);
+  const [menus, setMenus] = useState<Menu[]>([]);
+  const [weeklyMenu, setWeeklyMenu] = useState<MeanPlan[]>([]);
   const [loading, setLoading] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [regenerateDate, setRegenrateDate] = useState<string>("");
 
   const generateMenu = async () => {
     try {
@@ -49,7 +47,7 @@ export default function WeeklyMenuScreen() {
       });
 
       if (response.data) {
-        setWeeklyMenu(response.data);
+        fetchWeeklyMenuList();
       }
     } catch (error) {
       console.error("Failed to generate menu:", error);
@@ -60,36 +58,62 @@ export default function WeeklyMenuScreen() {
 
   const fetchMenuList = async () => {
     try {
-      const response = await api.get("/meal-plan");
-      setMenu(response.data);
+      setLoading(true);
+      const response = await api.get(`/menu`);
+      setMenus(response.data);
     } catch (error) {
       console.error("Failed to fetch menu list:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchWeeklyMenuList = async () => {
+    try {
+      setLoading(true);
+      const fromDate = new Date(Date.now() + 86400000)
+        .toISOString()
+        .split("T")[0];
+      const toDate = new Date(Date.now() + 86400000 * 7)
+        .toISOString()
+        .split("T")[0];
+      const response = await api.get(
+        `/meal-plan?fromDate=${fromDate}&toDate=${toDate}`
+      );
+      setWeeklyMenu(response.data);
+    } catch (error) {
+      console.error("Failed to fetch menu list:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchMenuList();
+    fetchWeeklyMenuList();
   }, []);
 
-  const getMenuList = useCallback(
-    (id: string) => {
-      for (const item of menu) {
-        const found = item.menus.find((data) => data._id === id);
-        if (found) return found;
-      }
-      return {
-        meal: {
-          type: "",
-          name: "",
-        },
-        vegetable: {
-          type: "",
-          name: "",
-        },
+  const handleRegenerate = async (id: string) => {
+    setLoading(true);
+    try {
+      const payload = {
+        date: regenerateDate,
+        menus: [id],
       };
-    },
-    [menu]
-  );
+      const res = await api.put(`meal-plan/${regenerateDate}`, payload);
+      if (res.data) fetchWeeklyMenuList();
+    } catch (error) {
+      console.error("Failed to fetch menu list:", error);
+    } finally {
+      setLoading(false);
+      setModalVisible(false);
+    }
+  };
+
+  const handleUpdate = async (date: string) => {
+    setRegenrateDate(date);
+    setModalVisible(true);
+  };
 
   return (
     <View style={styles.container}>
@@ -98,6 +122,7 @@ export default function WeeklyMenuScreen() {
         onPress={generateMenu}
         color={Colors.primary}
       />
+
       <Text style={styles.title}>Your Weekly Menu</Text>
 
       {loading ? (
@@ -108,15 +133,23 @@ export default function WeeklyMenuScreen() {
           keyExtractor={(item) => item._id}
           renderItem={({ item }) => (
             <View style={styles.card}>
-              <Text style={styles.day}>
-                {getDayAndCurrentTime(item.date)} - {item.date}
-              </Text>
-              {item.menus.map((menuId) => {
-                const menuItem = getMenuList(menuId);
+              <View style={styles.rowBetween}>
+                <Text style={styles.day}>
+                  {getDayAndCurrentTime(item.date)} - {item.date}
+                </Text>
+
+                <TouchableOpacity
+                  onPress={() => handleUpdate(item.date)}
+                  style={styles.editButton}
+                >
+                  <Text style={styles.iconText}>✏️</Text>
+                </TouchableOpacity>
+              </View>
+              {item.menus.map((menu, index) => {
                 return (
-                  <View key={menuId} style={styles.menuItem}>
-                    <Text>🍛 {menuItem.meal.name}</Text>
-                    <Text>🥬 {menuItem.vegetable.name}</Text>
+                  <View key={index} style={styles.menuItem}>
+                    <Text>🍛 {menu.meal.name}</Text>
+                    <Text>🥬 {menu.vegetable.name}</Text>
                   </View>
                 );
               })}
@@ -124,13 +157,20 @@ export default function WeeklyMenuScreen() {
           )}
         />
       )}
+      <ChooseMealBox
+        modalVisible={modalVisible}
+        setModalVisible={setModalVisible}
+        isLoading={loading}
+        menus={menus}
+        handleRegenerate={handleRegenerate}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: 10,
+    paddingTop: 30,
     paddingHorizontal: 20,
     flex: 1,
     backgroundColor: "#fff",
@@ -148,9 +188,21 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+  },
+  rowBetween: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  editButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+  },
+  iconText: {
+    color: "#fff",
+    fontWeight: "600",
   },
   day: {
     fontSize: Fonts.size.subTitle,

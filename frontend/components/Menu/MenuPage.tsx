@@ -3,7 +3,6 @@ import api from "../../api/axios";
 import {
   View,
   Text,
-  TextInput,
   StyleSheet,
   TouchableOpacity,
   FlatList,
@@ -11,8 +10,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Modal,
 } from "react-native";
 import { Colors, Fonts } from "../../constants/theme";
+import MenuForm from "./MenuForm";
+import ConfirmModalBox from "../common/ConfirmModalBox";
 
 type Menu = {
   _id: string;
@@ -20,58 +22,114 @@ type Menu = {
   type: string;
 };
 
+type MenlPlan = {
+  _id: string;
+  meal: Menu;
+  vegetable: Menu;
+};
+
 export default function MenuPage() {
   const [loading, setLoading] = useState(false);
-  const [adding, setAdding] = useState(false);
-  const [menus, setMenus] = useState<Menu[]>([]);
+  const [confirmModal, setConfirmModal] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedId, setSelectedId] = useState<string>("");
+  const [menus, setMenus] = useState<MenlPlan[]>([]);
+  const [mealCurry, setMealCurry] = useState<Menu[]>([]);
+  const [vegetableCurry, setVegetableCurry] = useState<Menu[]>([]);
   const [error, setError] = useState({
-    name: "",
-    type: "",
+    _id: "",
+    meal: "",
+    vegetable: "",
   });
   const [formData, setFormData] = useState({
-    name: "",
-    type: "",
+    _id: "",
+    meal: "",
+    vegetable: "",
   });
-  const [viewAll, setViewAll] = useState(false);
+
+  const fetchMealsAndVegetables = async () => {
+    try {
+      const [mealRes, vegRes] = await Promise.all([
+        api.get("/curry?type=meal"),
+        api.get("/curry?type=vegetable"),
+      ]);
+      setMealCurry(mealRes.data);
+      setVegetableCurry(vegRes.data);
+    } catch (err) {
+      console.error("Error loading meals/vegetables", err);
+    }
+  };
 
   const handleAddMenu = async () => {
-    if (formData && !!formData.name.trim() && !!formData.type.trim()) {
+    if (!!formData.meal && !!formData.vegetable) {
       try {
-        setAdding(true);
-        await api.post("/curry", formData);
+        setLoading(true);
+        await api.post("/menu", formData);
         fetchMenu();
         setFormData({
-          name: "",
-          type: "",
+          _id: "",
+          meal: "",
+          vegetable: "",
         });
         setError({
-          name: "",
-          type: "",
+          _id: "",
+          meal: "",
+          vegetable: "",
         });
       } catch (error) {
         console.error("Failed to generate menu:", error);
       } finally {
-        setAdding(false);
+        setLoading(false);
       }
     } else {
       setError({
-        name: !!formData.name.trim() ? "" : "Name is required",
-        type: !!formData.type.trim() ? "" : "Type is required",
+        _id: "",
+        meal: !!formData.meal.trim() ? "" : "Meal is required",
+        vegetable: !!formData.vegetable.trim() ? "" : "Vegetable is required",
       });
     }
   };
-  const renderMenuItem = ({ item }: { item: Menu }) => (
-    <View style={styles.menuItem}>
-      <Text style={styles.menuName}>{item.name}</Text>
-    </View>
-  );
 
-  const menusToDisplay = viewAll ? menus : menus.slice(-4);
+  const handleUpdateMenu = async () => {
+    if (!!formData.meal && !!formData.vegetable) {
+      try {
+        setLoading(true);
+        const isUpdate = !!formData._id;
+        if (isUpdate) {
+          await api.put(`/menu/${formData._id}`, formData);
+        } else {
+          await api.post("/menu", formData);
+        }
+        fetchMenu();
+        setFormData({
+          _id: "",
+          meal: "",
+          vegetable: "",
+        });
+        setError({
+          _id: "",
+          meal: "",
+          vegetable: "",
+        });
+      } catch (error) {
+        console.error("Failed to generate menu:", error);
+      } finally {
+        setLoading(false);
+        setModalVisible(false);
+      }
+    } else {
+      setError({
+        _id: "",
+        meal: !!formData.meal.trim() ? "" : "Meal is required",
+        vegetable: !!formData.vegetable.trim() ? "" : "Vegetable is required",
+      });
+    }
+  };
 
   const fetchMenu = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/curry");
+      const response = await api.get("/menu");
       setMenus(response.data);
     } catch (error) {
       console.error("Error fetching menus:", error);
@@ -81,10 +139,37 @@ export default function MenuPage() {
   };
 
   useEffect(() => {
+    fetchMealsAndVegetables();
     fetchMenu();
   }, []);
 
-  const typeOptions = ["meal", "vegetable"];
+  const handleUpdate = (menu: MenlPlan) => {
+    setFormData({
+      _id: menu._id,
+      meal: menu.meal._id,
+      vegetable: menu.vegetable._id,
+    });
+    setError({ _id: "", meal: "", vegetable: "" });
+    setModalVisible(true);
+  };
+
+  const handleDelete = async () => {
+    try {
+      await api.delete(`/menu/${selectedId}`);
+      fetchMenu();
+    } catch (error) {
+      console.error("Error deleting menu:", error);
+    } finally {
+      setSelectedId("");
+      setConfirmModal(false);
+    }
+  };
+
+  const handleAdd = () => {
+    setFormData({ _id: "", meal: "", vegetable: "" });
+    setError({ _id: "", meal: "", vegetable: "" });
+    setModalVisible(true);
+  };
 
   return (
     <KeyboardAvoidingView
@@ -95,77 +180,78 @@ export default function MenuPage() {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.title}>🍽️ Create Your Menu</Text>
-
-        {!viewAll && (
-          <>
-            <View style={styles.radioGroup}>
-              {typeOptions.map((option) => (
-                <TouchableOpacity
-                  key={option}
-                  style={styles.radioButton}
-                  onPress={() => setFormData({ ...formData, type: option })}
-                >
-                  <View style={styles.radioOuter}>
-                    {formData.type === option && (
-                      <View style={styles.radioInner} />
-                    )}
-                  </View>
-                  <Text style={styles.radioLabel}>{option}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            <Text style={styles.errorText}>{error.type}</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Menu Name"
-              value={formData.name}
-              onChangeText={(value) =>
-                setFormData({ ...formData, name: value })
-              }
-            />
-            <Text style={styles.errorText}>{error.name}</Text>
-
-            <TouchableOpacity
-              style={[styles.addButton, adding && styles.disabledButton]}
-              onPress={handleAddMenu}
-              disabled={adding}
-            >
-              <Text style={styles.addButtonText}>
-                {adding ? "Adding..." : "Add Menu"}
-              </Text>
-            </TouchableOpacity>
-          </>
-        )}
-
         <View style={styles.menuHeader}>
           <Text style={styles.menusTitle}>All Menus</Text>
-          {!viewAll ? (
-            <TouchableOpacity onPress={() => setViewAll(true)}>
-              <Text style={styles.viewAllText}>View All</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity onPress={() => setViewAll(false)}>
-              <Text style={styles.viewAllText}>Back</Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity
+            style={[styles.actionButton, styles.addNewButton]}
+            onPress={handleAdd}
+          >
+            <Text style={styles.buttonText}>Add New</Text>
+          </TouchableOpacity>
         </View>
 
         {loading ? (
           <ActivityIndicator size="large" color={Colors.primary} />
         ) : (
           <FlatList
-            data={menusToDisplay}
+            data={menus}
             keyExtractor={(item) => item._id}
-            renderItem={renderMenuItem}
-            contentContainerStyle={styles.menuList}
+            renderItem={({ item, index }) => (
+              <View key={index} style={styles.menuItem}>
+                <Text>🍛 {item.meal.name}</Text>
+                <Text>🥬 {item.vegetable.name}</Text>
+                <View style={styles.buttonGroup}>
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.updateButton]}
+                    onPress={() => handleUpdate(item)}
+                  >
+                    <Text style={styles.buttonText}>✏️ Update</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.deleteButton]}
+                    onPress={() => {
+                      setSelectedId(item._id);
+                      setConfirmModal(true);
+                    }}
+                  >
+                    <Text style={styles.buttonText}>🗑️ Delete</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
           />
         )}
+        <ConfirmModalBox
+          isModalVisible={confirmModal}
+          setIsModalVisible={setConfirmModal}
+          isLoading={loading}
+          handleSubmit={handleDelete}
+        />
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <MenuForm
+                error={error}
+                formData={formData}
+                setFormData={setFormData}
+                mealCurry={mealCurry}
+                vegetableCurry={vegetableCurry}
+                handleAddMenu={handleUpdateMenu}
+                adding={loading}
+                setModalVisible={setModalVisible}
+              />
+            </View>
+          </View>
+        </Modal>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -185,30 +271,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 20,
     color: Colors.primary,
-  },
-  input: {
-    height: 35,
-    borderColor: Colors.lightGray,
-    borderWidth: 1,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 8,
-    fontSize: Fonts.size.text,
-    marginTop: 15,
-  },
-  addButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: Colors.primary,
-    paddingVertical: 7,
-    justifyContent: "center",
-    borderRadius: 10,
-    marginBottom: 30,
-    marginTop: 15,
-  },
-  addButtonText: {
-    color: Colors.white,
-    fontSize: Fonts.size.button,
   },
   menuHeader: {
     flexDirection: "row",
@@ -239,35 +301,43 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: Colors.primary,
   },
-  radioGroup: {
-    flexDirection: "row",
-  },
-  radioButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginRight: 20,
-  },
-  radioOuter: {
-    height: 15,
-    width: 15,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: "#555",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 6,
-  },
-  radioInner: {
-    height: 10,
-    width: 10,
-    borderRadius: 5,
-    backgroundColor: "#555",
-  },
-  radioLabel: {
+  typeName: {
     fontSize: Fonts.size.text,
+    color: Colors.lightGray,
   },
-  errorText: {
-    color: Colors.danger,
-    width: "100%",
+  buttonGroup: {
+    flexDirection: "row",
+    marginTop: 10,
+    justifyContent: "flex-end",
+    gap: 10, // or use marginRight on buttons if your RN version doesn’t support gap
+  },
+  actionButton: {
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 6,
+  },
+  addNewButton: {
+    backgroundColor: Colors.primary,
+  },
+  updateButton: {
+    backgroundColor: "#4caf50",
+  },
+  deleteButton: {
+    backgroundColor: "#f44336",
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 12,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  modalContent: {
+    backgroundColor: Colors.white,
+    margin: 20,
+    padding: 20,
+    borderRadius: 10,
   },
 });
