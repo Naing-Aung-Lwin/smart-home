@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import api from "../../api/axios";
 import {
   View,
   Text,
@@ -11,11 +12,17 @@ import {
 } from "react-native";
 import { Colors, Fonts } from "../../constants/theme";
 
+interface Category {
+  _id: string;
+  name: string;
+}
 interface Expense {
-  id: string;
-  date?: string;
-  reason: string;
+  _id: string;
+  date: string;
+  categoryId: Category;
+  categoryType: string;
   amount: number;
+  budgetId: string;
 }
 
 const ExpensePage: React.FC = () => {
@@ -27,22 +34,37 @@ const ExpensePage: React.FC = () => {
   const [monthlyBudget] = useState<number>(2000); // Set your budget here
 
   useEffect(() => {
-    const total = expenses.reduce((acc, item) => acc + item.amount, 0);
-    setTotalExpense(total);
-  }, [expenses]);
+    fetchExpenses();
+  }, []);
 
-  const handleAddExpense = () => {
+  const fetchExpenses = async () => {
+    const response = await api.get("/cash-flows?type=ExpenseCategory");
+    setExpenses(response.data);
+    setTotalExpense(
+      response.data.reduce(
+        (total: number, income: Expense) => total + income.amount,
+        0
+      )
+    );
+  };
+
+  const handleAddExpense = async () => {
     if (!reason || !amount) return;
-    const newExpense = {
-      id: Math.random().toString(),
-      date: "2025-05-05",
-      reason,
-      amount: parseFloat(amount),
+    const payload = {
+      category: reason,
+      categoryType: "ExpenseCategory",
+      amount: Number(amount),
+      date: new Date(Date.now()).toISOString().split("T")[0],
+      budgetId: "6819cf9fa26a25a955c65feb",
     };
-    setExpenses((prev) => [...prev, newExpense]);
-    setDate("");
-    setReason("");
-    setAmount("");
+    const response = await api.post("/cash-flows", payload);
+
+    if (response) {
+      setDate("");
+      setReason("");
+      setAmount("");
+      fetchExpenses();
+    }
   };
 
   const remaining = monthlyBudget - totalExpense;
@@ -86,12 +108,12 @@ const ExpensePage: React.FC = () => {
 
       <FlatList
         data={expenses}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item._id}
         contentContainerStyle={styles.listContainer}
         renderItem={({ item }) => (
           <View style={styles.expenseItem}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.expenseReason}>{item.reason}</Text>
+              <Text style={styles.expenseReason}>{item?.categoryId?.name}</Text>
               <Text style={styles.expenseDate}>{item.date}</Text>
             </View>
             <Text style={styles.expenseAmount}>- {item.amount} MMK</Text>

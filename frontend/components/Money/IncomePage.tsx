@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import api from "../../api/axios";
 import {
   View,
   Text,
@@ -11,11 +12,17 @@ import {
 } from "react-native";
 import { Colors, Fonts } from "../../constants/theme";
 
+interface Category {
+  _id: string;
+  name: string;
+}
 interface Income {
-  id: string;
+  _id: string;
   date: string;
-  description: string;
+  categoryId: Category;
+  categoryType: string;
   amount: number;
+  budgetId: string;
 }
 
 const IncomePage: React.FC = () => {
@@ -25,21 +32,38 @@ const IncomePage: React.FC = () => {
   const [totalIncome, setTotalIncome] = useState<number>(0);
 
   useEffect(() => {
-    const total = incomes.reduce((acc, item) => acc + item.amount, 0);
-    setTotalIncome(total);
-  }, [incomes]);
+    fetchIncomes();
+  }, []);
 
-  const handleAddIncome = () => {
+  const fetchIncomes = async () => {
+    const response = await api.get("/cash-flows?type=IncomeSource");
+    setIncomes(response.data);
+    setTotalIncome(
+      response.data.reduce(
+        (total: number, income: Income) => total + income.amount,
+        0
+      )
+    );
+  };
+
+  const handleAddIncome = async () => {
     if (!description || !amount) return;
-    const newIncome: Income = {
-      id: Math.random().toString(),
-      date: new Date().toISOString().split("T")[0],
-      description,
-      amount: parseFloat(amount),
+
+    const payload = {
+      category: description,
+      categoryType: "IncomeSource",
+      amount: Number(amount),
+      date: new Date(Date.now()).toISOString().split("T")[0],
+      budgetId: "6819cf9fa26a25a955c65feb",
     };
-    setIncomes((prev) => [...prev, newIncome]);
-    setDescription("");
-    setAmount("");
+
+    const response = await api.post("/cash-flows", payload);
+
+    if (response) {
+      setAmount("");
+      setDescription("");
+      fetchIncomes();
+    }
   };
 
   return (
@@ -73,12 +97,14 @@ const IncomePage: React.FC = () => {
 
       <FlatList
         data={incomes}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item._id}
         contentContainerStyle={styles.listContainer}
         renderItem={({ item }) => (
           <View style={styles.incomeItem}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.incomeDescription}>{item.description}</Text>
+              <Text style={styles.incomeDescription}>
+                {item?.categoryId?.name}
+              </Text>
               <Text style={styles.incomeDate}>{item.date}</Text>
             </View>
             <Text style={styles.incomeAmount}>+ {item.amount} MMK</Text>

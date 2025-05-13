@@ -1,26 +1,47 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { Colors, Fonts } from "../../constants/theme";
+import api from "../../api/axios";
+
+interface Budget {
+  _id: string;
+  month: string;
+  totalIncome: number;
+  totalExpense: number;
+}
 
 const BudgetPage: React.FC = () => {
-  const [totalIncome, setTotalIncome] = useState<number>(3000); // Example income
-  const [totalExpense, setTotalExpense] = useState<number>(1200); // Example expense
+  const [budgets, setBudgets] = useState<Budget>({
+    _id: "",
+    month: "",
+    totalIncome: 0,
+    totalExpense: 0,
+  });
 
-  const remainingBalance = totalIncome - totalExpense;
+  useEffect(() => {
+    fetchBudget();
+  }, []);
+
+  const fetchBudget = async () => {
+    const response = await api.get("/budget");
+    if (response.data && response.data.length > 0) {
+      setBudgets(response.data[0]);
+    }
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.card}>
         <Text style={styles.label}>Total Income</Text>
         <Text style={[styles.amount, { color: "#16A34A" }]}>
-          + {totalIncome} MMK
+          + {budgets.totalIncome} MMK
         </Text>
       </View>
 
       <View style={styles.card}>
         <Text style={styles.label}>Total Expenses</Text>
         <Text style={[styles.amount, { color: "#DC2626" }]}>
-          - {totalExpense} MMK
+          - {budgets.totalExpense} MMK
         </Text>
       </View>
 
@@ -29,11 +50,16 @@ const BudgetPage: React.FC = () => {
         <Text
           style={[
             styles.amount,
-            { color: remainingBalance >= 0 ? "#0F766E" : "#DC2626" },
+            {
+              color:
+                budgets.totalIncome - budgets.totalExpense >= 0
+                  ? "#0F766E"
+                  : "#DC2626",
+            },
           ]}
         >
-          {remainingBalance >= 0 ? "+ " : "- "}
-          {Math.abs(remainingBalance)} MMK
+          {budgets.totalIncome - budgets.totalExpense >= 0 ? "+ " : "- "}
+          {Math.abs(budgets.totalIncome - budgets.totalExpense)} MMK
         </Text>
       </View>
     </ScrollView>
