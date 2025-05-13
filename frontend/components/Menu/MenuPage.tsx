@@ -196,29 +196,36 @@ export default function MenuPage() {
           <FlatList
             data={menus}
             keyExtractor={(item) => item._id}
-            renderItem={({ item, index }) => (
-              <View key={index} style={styles.menuItem}>
-                <Text>🍛 {item.meal.name}</Text>
-                <Text>🥬 {item.vegetable.name}</Text>
-                <View style={styles.buttonGroup}>
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.updateButton]}
-                    onPress={() => handleUpdate(item)}
-                  >
-                    <Text style={styles.buttonText}>✏️ Update</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.deleteButton]}
-                    onPress={() => {
-                      setSelectedId(item._id);
-                      setConfirmModal(true);
-                    }}
-                  >
-                    <Text style={styles.buttonText}>🗑️ Delete</Text>
-                  </TouchableOpacity>
+            renderItem={({ item, index }) =>
+              item &&
+              item.meal &&
+              item.vegetable &&
+              item.meal.name &&
+              item.vegetable.name ? (
+                <View key={index} style={styles.menuItem}>
+                  <Text>🍛 {item.meal.name}</Text>
+                  <Text>🥬 {item.vegetable.name}</Text>
+
+                  <View style={styles.buttonGroup}>
+                    <TouchableOpacity
+                      style={[styles.actionButton, styles.updateButton]}
+                      onPress={() => handleUpdate(item)}
+                    >
+                      <Text style={styles.buttonText}>✏️ Update</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.actionButton, styles.deleteButton]}
+                      onPress={() => {
+                        setSelectedId(item._id);
+                        setConfirmModal(true);
+                      }}
+                    >
+                      <Text style={styles.buttonText}>🗑️ Delete</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
-            )}
+              ) : null
+            }
           />
         )}
         <ConfirmModalBox
