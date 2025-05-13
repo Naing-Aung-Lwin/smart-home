@@ -95,3 +95,62 @@ export class UpdateCashFlowDto {
   })
   budgetId: string;
 }
+
+export class FilterCashFlowDto {
+  @IsMongoId()
+  @IsOptional()
+  @ApiProperty({
+    description: 'Category associated with the income or expense',
+    required: false,
+  })
+  categoryId: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({
+    description: 'Category type (ExpenseCategory or IncomeSource)',
+    required: false,
+  })
+  @IsEnum(['ExpenseCategory', 'IncomeSource'])
+  categoryType: string;
+
+  @IsNumber()
+  @IsOptional()
+  @ApiProperty({
+    description: 'Minimum amount of the income or expense',
+    required: false,
+  })
+  minAmount: number;
+
+  @IsNumber()
+  @IsOptional()
+  @ApiProperty({
+    description: 'Maximum amount of the income or expense',
+    required: false,
+  })
+  maxAmount: number;
+
+  @IsDateString()
+  @IsOptional()
+  @ApiProperty({
+    description: 'Start date of the income or expense',
+    required: false,
+  })
+  startDate: string;
+
+  @IsDateString()
+  @IsOptional()
+  @ApiProperty({
+    description: 'End date of the income or expense',
+    required: false,
+  })
+  endDate: string;
+
+  @IsMongoId()
+  @IsOptional()
+  @ApiProperty({
+    description: 'Budget associated with the income',
+    required: false,
+  })
+  budgetId: string;
+}
