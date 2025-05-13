@@ -115,88 +115,90 @@ export default function MenuPage() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
+    <>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <Text style={styles.title}>🍽️ Add New Curry</Text>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Text style={styles.title}>🍽️ Add New Curry</Text>
 
-        {!viewAll && (
-          <>
-            <View style={styles.radioGroup}>
-              {typeOptions.map((option) => (
-                <TouchableOpacity
-                  key={option}
-                  style={styles.radioButton}
-                  onPress={() => setFormData({ ...formData, type: option })}
-                >
-                  <View style={styles.radioOuter}>
-                    {formData.type === option && (
-                      <View style={styles.radioInner} />
-                    )}
-                  </View>
-                  <Text style={styles.radioLabel}>{option}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            <Text style={styles.errorText}>{error.type}</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Curry Name"
-              value={formData.name}
-              onChangeText={(value) =>
-                setFormData({ ...formData, name: value })
-              }
-            />
-            <Text style={styles.errorText}>{error.name}</Text>
+          {!viewAll && (
+            <>
+              <View style={styles.radioGroup}>
+                {typeOptions.map((option) => (
+                  <TouchableOpacity
+                    key={option}
+                    style={styles.radioButton}
+                    onPress={() => setFormData({ ...formData, type: option })}
+                  >
+                    <View style={styles.radioOuter}>
+                      {formData.type === option && (
+                        <View style={styles.radioInner} />
+                      )}
+                    </View>
+                    <Text style={styles.radioLabel}>{option}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <Text style={styles.errorText}>{error.type}</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Curry Name"
+                value={formData.name}
+                onChangeText={(value) =>
+                  setFormData({ ...formData, name: value })
+                }
+              />
+              <Text style={styles.errorText}>{error.name}</Text>
 
-            <TouchableOpacity
-              style={[styles.addButton, adding && styles.disabledButton]}
-              onPress={handleAddMenu}
-              disabled={adding}
-            >
-              <Text style={styles.addButtonText}>
-                {adding ? "Adding..." : "Add Curry"}
-              </Text>
-            </TouchableOpacity>
-          </>
-        )}
-
-        <View style={styles.menuHeader}>
-          <Text style={styles.menusTitle}>All Currys</Text>
-          {!viewAll ? (
-            <TouchableOpacity onPress={() => setViewAll(true)}>
-              <Text style={styles.viewAllText}>View All</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity onPress={() => setViewAll(false)}>
-              <Text style={styles.viewAllText}>Back</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.addButton, adding && styles.disabledButton]}
+                onPress={handleAddMenu}
+                disabled={adding}
+              >
+                <Text style={styles.addButtonText}>
+                  {adding ? "Adding..." : "Add Curry"}
+                </Text>
+              </TouchableOpacity>
+            </>
           )}
-        </View>
 
-        {loading ? (
-          <ActivityIndicator size="large" color={Colors.primary} />
-        ) : (
-          <FlatList
-            data={menusToDisplay}
-            keyExtractor={(item) => item._id}
-            renderItem={renderMenuItem}
-            contentContainerStyle={styles.menuList}
-          />
-        )}
-        <ConfirmModalBox
-          isModalVisible={confirmModal}
-          setIsModalVisible={setConfirmModal}
-          isLoading={loading}
-          handleSubmit={handleDelete}
-        />
-      </ScrollView>
-    </KeyboardAvoidingView>
+          <View style={styles.menuHeader}>
+            <Text style={styles.menusTitle}>All Currys</Text>
+            {!viewAll ? (
+              <TouchableOpacity onPress={() => setViewAll(true)}>
+                <Text style={styles.viewAllText}>View All</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity onPress={() => setViewAll(false)}>
+                <Text style={styles.viewAllText}>Back</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {loading ? (
+            <ActivityIndicator size="large" color={Colors.primary} />
+          ) : (
+            <FlatList
+              data={menusToDisplay}
+              keyExtractor={(item) => item._id}
+              renderItem={renderMenuItem}
+              contentContainerStyle={styles.menuList}
+            />
+          )}
+        </ScrollView>
+      </KeyboardAvoidingView>
+      <ConfirmModalBox
+        isModalVisible={confirmModal}
+        setIsModalVisible={setConfirmModal}
+        isLoading={loading}
+        handleSubmit={handleDelete}
+      />
+    </>
   );
 }
 

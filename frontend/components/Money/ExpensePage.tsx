@@ -31,14 +31,13 @@ const ExpensePage: React.FC = () => {
   const [amount, setAmount] = useState("");
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [totalExpense, setTotalExpense] = useState<number>(0);
-  const [monthlyBudget] = useState<number>(2000); // Set your budget here
 
   useEffect(() => {
     fetchExpenses();
   }, []);
 
   const fetchExpenses = async () => {
-    const response = await api.get("/cash-flows?type=ExpenseCategory");
+    const response = await api.get("/cash-flows?categoryType=ExpenseCategory");
     setExpenses(response.data);
     setTotalExpense(
       response.data.reduce(
@@ -67,8 +66,6 @@ const ExpensePage: React.FC = () => {
     }
   };
 
-  const remaining = monthlyBudget - totalExpense;
-
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -95,14 +92,8 @@ const ExpensePage: React.FC = () => {
       </View>
 
       <View style={styles.summary}>
-        <Text style={styles.summaryText}>Total: {totalExpense} MMK</Text>
-        <Text
-          style={[
-            styles.summaryText,
-            { color: remaining < 0 ? "red" : "green" },
-          ]}
-        >
-          Remaining: {remaining} MMK
+        <Text style={[styles.summaryText, { color: "red" }]}>
+          Total: {totalExpense} MMK
         </Text>
       </View>
 

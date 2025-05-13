@@ -172,91 +172,93 @@ export default function MenuPage() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
+    <>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <View style={styles.menuHeader}>
-          <Text style={styles.menusTitle}>All Menus</Text>
-          <TouchableOpacity
-            style={[styles.actionButton, styles.addNewButton]}
-            onPress={handleAdd}
-          >
-            <Text style={styles.buttonText}>Add New</Text>
-          </TouchableOpacity>
-        </View>
-
-        {loading ? (
-          <ActivityIndicator size="large" color={Colors.primary} />
-        ) : (
-          <FlatList
-            data={menus}
-            keyExtractor={(item) => item._id}
-            renderItem={({ item, index }) =>
-              item &&
-              item.meal &&
-              item.vegetable &&
-              item.meal.name &&
-              item.vegetable.name ? (
-                <View key={index} style={styles.menuItem}>
-                  <Text>🍛 {item.meal.name}</Text>
-                  <Text>🥬 {item.vegetable.name}</Text>
-
-                  <View style={styles.buttonGroup}>
-                    <TouchableOpacity
-                      style={[styles.actionButton, styles.updateButton]}
-                      onPress={() => handleUpdate(item)}
-                    >
-                      <Text style={styles.buttonText}>✏️ Update</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.actionButton, styles.deleteButton]}
-                      onPress={() => {
-                        setSelectedId(item._id);
-                        setConfirmModal(true);
-                      }}
-                    >
-                      <Text style={styles.buttonText}>🗑️ Delete</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ) : null
-            }
-          />
-        )}
-        <ConfirmModalBox
-          isModalVisible={confirmModal}
-          setIsModalVisible={setConfirmModal}
-          isLoading={loading}
-          handleSubmit={handleDelete}
-        />
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={modalVisible}
-          onRequestClose={() => setModalVisible(false)}
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
         >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <MenuForm
-                error={error}
-                formData={formData}
-                setFormData={setFormData}
-                mealCurry={mealCurry}
-                vegetableCurry={vegetableCurry}
-                handleAddMenu={handleUpdateMenu}
-                adding={loading}
-                setModalVisible={setModalVisible}
-              />
-            </View>
+          <View style={styles.menuHeader}>
+            <Text style={styles.menusTitle}>All Menus</Text>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.addNewButton]}
+              onPress={handleAdd}
+            >
+              <Text style={styles.buttonText}>Add New</Text>
+            </TouchableOpacity>
           </View>
-        </Modal>
-      </ScrollView>
-    </KeyboardAvoidingView>
+
+          {loading ? (
+            <ActivityIndicator size="large" color={Colors.primary} />
+          ) : (
+            <FlatList
+              data={menus}
+              keyExtractor={(item) => item._id}
+              renderItem={({ item, index }) =>
+                item &&
+                item.meal &&
+                item.vegetable &&
+                item.meal.name &&
+                item.vegetable.name ? (
+                  <View key={index} style={styles.menuItem}>
+                    <Text>🍛 {item.meal.name}</Text>
+                    <Text>🥬 {item.vegetable.name}</Text>
+
+                    <View style={styles.buttonGroup}>
+                      <TouchableOpacity
+                        style={[styles.actionButton, styles.updateButton]}
+                        onPress={() => handleUpdate(item)}
+                      >
+                        <Text style={styles.buttonText}>✏️ Update</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.actionButton, styles.deleteButton]}
+                        onPress={() => {
+                          setSelectedId(item._id);
+                          setConfirmModal(true);
+                        }}
+                      >
+                        <Text style={styles.buttonText}>🗑️ Delete</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ) : null
+              }
+            />
+          )}
+        </ScrollView>
+      </KeyboardAvoidingView>
+      <ConfirmModalBox
+        isModalVisible={confirmModal}
+        setIsModalVisible={setConfirmModal}
+        isLoading={loading}
+        handleSubmit={handleDelete}
+      />
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <MenuForm
+              error={error}
+              formData={formData}
+              setFormData={setFormData}
+              mealCurry={mealCurry}
+              vegetableCurry={vegetableCurry}
+              handleAddMenu={handleUpdateMenu}
+              adding={loading}
+              setModalVisible={setModalVisible}
+            />
+          </View>
+        </View>
+      </Modal>
+    </>
   );
 }
 const styles = StyleSheet.create({

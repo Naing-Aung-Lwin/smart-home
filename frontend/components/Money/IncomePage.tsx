@@ -36,7 +36,7 @@ const IncomePage: React.FC = () => {
   }, []);
 
   const fetchIncomes = async () => {
-    const response = await api.get("/cash-flows?type=IncomeSource");
+    const response = await api.get("/cash-flows?categoryType=IncomeSource");
     setIncomes(response.data);
     setTotalIncome(
       response.data.reduce(
