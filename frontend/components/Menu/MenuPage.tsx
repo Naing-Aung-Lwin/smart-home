@@ -177,59 +177,54 @@ export default function MenuPage() {
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={styles.menuHeader}>
-            <Text style={styles.menusTitle}>All Menus</Text>
-            <TouchableOpacity
-              style={[styles.actionButton, styles.addNewButton]}
-              onPress={handleAdd}
-            >
-              <Text style={styles.buttonText}>Add New</Text>
-            </TouchableOpacity>
-          </View>
+        <View style={styles.menuHeader}>
+          <Text style={styles.menusTitle}>All Menus</Text>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.addNewButton]}
+            onPress={handleAdd}
+          >
+            <Text style={styles.buttonText}>Add New</Text>
+          </TouchableOpacity>
+        </View>
 
-          {loading ? (
-            <ActivityIndicator size="large" color={Colors.primary} />
-          ) : (
-            <FlatList
-              data={menus}
-              keyExtractor={(item) => item._id}
-              renderItem={({ item, index }) =>
-                item &&
-                item.meal &&
-                item.vegetable &&
-                item.meal.name &&
-                item.vegetable.name ? (
-                  <View key={index} style={styles.menuItem}>
-                    <Text>🍛 {item.meal.name}</Text>
-                    <Text>🥬 {item.vegetable.name}</Text>
+        {loading ? (
+          <ActivityIndicator size="large" color={Colors.primary} />
+        ) : (
+          <FlatList
+            data={menus}
+            keyExtractor={(item) => item._id}
+            renderItem={({ item, index }) =>
+              item &&
+              item.meal &&
+              item.vegetable &&
+              item.meal.name &&
+              item.vegetable.name ? (
+                <View key={index} style={styles.menuItem}>
+                  <Text>🍛 {item.meal.name}</Text>
+                  <Text>🥬 {item.vegetable.name}</Text>
 
-                    <View style={styles.buttonGroup}>
-                      <TouchableOpacity
-                        style={[styles.actionButton, styles.updateButton]}
-                        onPress={() => handleUpdate(item)}
-                      >
-                        <Text style={styles.buttonText}>✏️ Update</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[styles.actionButton, styles.deleteButton]}
-                        onPress={() => {
-                          setSelectedId(item._id);
-                          setConfirmModal(true);
-                        }}
-                      >
-                        <Text style={styles.buttonText}>🗑️ Delete</Text>
-                      </TouchableOpacity>
-                    </View>
+                  <View style={styles.buttonGroup}>
+                    <TouchableOpacity
+                      style={[styles.actionButton, styles.updateButton]}
+                      onPress={() => handleUpdate(item)}
+                    >
+                      <Text style={styles.buttonText}>✏️ Update</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.actionButton, styles.deleteButton]}
+                      onPress={() => {
+                        setSelectedId(item._id);
+                        setConfirmModal(true);
+                      }}
+                    >
+                      <Text style={styles.buttonText}>🗑️ Delete</Text>
+                    </TouchableOpacity>
                   </View>
-                ) : null
-              }
-            />
-          )}
-        </ScrollView>
+                </View>
+              ) : null
+            }
+          />
+        )}
       </KeyboardAvoidingView>
       <ConfirmModalBox
         isModalVisible={confirmModal}
@@ -265,14 +260,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.white,
-  },
-  scrollContent: {
-    paddingTop: 15,
-    paddingLeft: 15,
-    paddingRight: 15,
-  },
-  disabledButton: {
-    backgroundColor: "#ccc",
+    padding: 20,
   },
   title: {
     fontSize: Fonts.size.subTitle,
@@ -322,7 +310,7 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     paddingVertical: 4,
-    paddingHorizontal: 10,
+    paddingHorizontal: 20,
     borderRadius: 6,
   },
   addNewButton: {
@@ -336,7 +324,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "#fff",
-    fontSize: 12,
+    fontSize: Fonts.size.button,
   },
   modalContainer: {
     flex: 1,
