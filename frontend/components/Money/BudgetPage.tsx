@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { Colors, Fonts } from "../../constants/theme";
 import api from "../../api/axios";
+import { Picker } from "@react-native-picker/picker";
 
 interface Budget {
   _id: string;
@@ -10,6 +11,22 @@ interface Budget {
   totalExpense: number;
 }
 
+const months = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+const years = [2023, 2024, 2025];
+
 const BudgetPage: React.FC = () => {
   const [budgets, setBudgets] = useState<Budget>({
     _id: "",
@@ -17,20 +34,69 @@ const BudgetPage: React.FC = () => {
     totalIncome: 0,
     totalExpense: 0,
   });
+  const today = new Date();
+  const currentMonth = today.toLocaleString("default", { month: "long" }); // e.g., "May"
+  const currentYear = today.getFullYear();
+  const [selectedMonth, setSelectedMonth] = useState<string>(currentMonth);
+  const [selectedYear, setSelectedYear] = useState<number>(currentYear);
+
+  const getMonthNumber = (monthName: string): string => {
+    const monthIndex = new Date(`${monthName} 1, 2000`).getMonth() + 1; // Jan=0, so add 1
+    return monthIndex < 10 ? `0${monthIndex}` : `${monthIndex}`;
+  };
 
   useEffect(() => {
     fetchBudget();
-  }, []);
+  }, [selectedMonth, selectedYear]);
 
   const fetchBudget = async () => {
-    const response = await api.get("/budget");
-    if (response.data && response.data.length > 0) {
-      setBudgets(response.data[0]);
+    try {
+      const formattedDate = `${selectedYear}-${getMonthNumber(selectedMonth)}`;
+      const response = await api.get(`/budget?month=${formattedDate}`);
+      if (response.data && response.data.length > 0) {
+        setBudgets(response.data[0]);
+      } else {
+        setBudgets({ _id: "", month: "", totalIncome: 0, totalExpense: 0 });
+      }
+    } catch (error) {
+      console.error("Failed to fetch budget", error);
     }
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.title}>Monthly Budget</Text>
+
+      {/* Filter UI */}
+      <View style={styles.filterContainer}>
+        <View style={styles.pickerWrapper}>
+          <Text style={styles.filterLabel}>Month</Text>
+          <Picker
+            selectedValue={selectedMonth}
+            style={styles.picker}
+            onValueChange={(itemValue) => setSelectedMonth(itemValue)}
+          >
+            {months.map((month) => (
+              <Picker.Item label={month} value={month} key={month} />
+            ))}
+          </Picker>
+        </View>
+
+        <View style={styles.pickerWrapper}>
+          <Text style={styles.filterLabel}>Year</Text>
+          <Picker
+            selectedValue={selectedYear}
+            style={styles.picker}
+            onValueChange={(itemValue) => setSelectedYear(itemValue)}
+          >
+            {years.map((year) => (
+              <Picker.Item label={year.toString()} value={year} key={year} />
+            ))}
+          </Picker>
+        </View>
+      </View>
+
+      {/* Budget Cards */}
       <View style={styles.card}>
         <Text style={styles.label}>Total Income</Text>
         <Text style={[styles.amount, { color: "#16A34A" }]}>
@@ -68,15 +134,34 @@ const BudgetPage: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 5,
+    padding: 16,
     backgroundColor: "#F7F8FA",
     flexGrow: 1,
   },
   title: {
-    fontSize: 24,
+    fontSize: Fonts.size.title,
     fontWeight: "bold",
-    color: "#1E293B",
+    color: Colors.primary,
+    marginBottom: 16,
+  },
+  filterContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 20,
+  },
+  pickerWrapper: {
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  filterLabel: {
+    fontSize: Fonts.size.text,
+    color: "#6B7280",
+    marginBottom: 4,
+  },
+  picker: {
+    height: 55,
+    backgroundColor: Colors.white,
+    borderRadius: 5,
   },
   card: {
     backgroundColor: Colors.white,
