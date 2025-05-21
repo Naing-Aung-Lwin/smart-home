@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Menu } from 'src/schemas/dining-plan/menu.schema';
-import { Model } from 'mongoose';
+import { FilterQuery, Model, Types } from 'mongoose';
 import { UpdateMenuDto } from 'src/dtos/dining-plan/menu/update-menu.dto';
 import { CreateMenuDto } from 'src/dtos/dining-plan/menu/create-menu.dto';
+import { SearchMenu } from 'src/dtos/dining-plan/menu/search-menu.dto';
 
 @Injectable()
 export class MenuService {
@@ -20,8 +21,19 @@ export class MenuService {
     return new this.menuModel(data).save();
   }
 
-  findAll(): Promise<Menu[]> {
-    return this.menuModel.find().populate('meal').populate('vegetable').exec();
+  findAll(query: SearchMenu): Promise<Menu[]> {
+    const andConditions: FilterQuery<Menu> = {};
+    if (query.meal) {
+      andConditions.meal = new Types.ObjectId(query.meal);
+    }
+    if (query.vegetable) {
+      andConditions.vegetable = new Types.ObjectId(query.vegetable);
+    }
+    return this.menuModel
+      .find(andConditions)
+      .populate('meal')
+      .populate('vegetable')
+      .exec();
   }
 
   async findOne(id: string): Promise<Menu | null> {

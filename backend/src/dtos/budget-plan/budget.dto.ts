@@ -25,7 +25,7 @@ export class CreateBudgetDto {
     example: '10000',
     description: 'Total income',
   })
-  totalIncome: number;
+  totalIncome?: number;
 
   @IsNumber()
   @IsOptional()
@@ -33,7 +33,7 @@ export class CreateBudgetDto {
     example: '5000',
     description: 'Total expense',
   })
-  totalExpense: number;
+  totalExpense?: number;
 }
 
 export class UpdateBudgetDto {

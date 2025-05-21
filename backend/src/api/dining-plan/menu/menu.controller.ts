@@ -7,6 +7,7 @@ import {
   Put,
   Delete,
   BadRequestException,
+  Query,
 } from '@nestjs/common';
 import { MenuService } from './menu.service';
 import { Menu } from 'src/schemas/dining-plan/menu.schema';
@@ -14,6 +15,7 @@ import { IdParam } from 'src/dtos/id.param';
 import { UpdateMenuDto } from 'src/dtos/dining-plan/menu/update-menu.dto';
 import { CreateMenuDto } from 'src/dtos/dining-plan/menu/create-menu.dto';
 import { ApiParam, ApiTags } from '@nestjs/swagger';
+import { SearchMenu } from 'src/dtos/dining-plan/menu/search-menu.dto';
 
 @ApiTags('menu')
 @Controller('menu')
@@ -30,9 +32,9 @@ export class MenuController {
   }
 
   @Get()
-  findAll(): Promise<Menu[]> {
+  findAll(@Query() query: SearchMenu): Promise<Menu[]> {
     try {
-      return this.menuService.findAll();
+      return this.menuService.findAll(query);
     } catch (error) {
       throw new BadRequestException(error);
     }

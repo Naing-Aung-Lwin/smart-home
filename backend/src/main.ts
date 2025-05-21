@@ -17,8 +17,8 @@ async function bootstrap() {
 
   // Swagger
   const config = new DocumentBuilder()
-    .setTitle('Your API Title')
-    .setDescription('API documentation for your NestJS app')
+    .setTitle('Smart Home API')
+    .setDescription('API documentation for Smart Home application')
     .setVersion('1.0')
     .build();
 

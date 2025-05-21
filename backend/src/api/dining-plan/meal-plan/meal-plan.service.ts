@@ -91,6 +91,7 @@ export class MealPlanService {
     }
     return this.mealPlanModel
       .find(filter)
+      .sort({ date: 1 })
       .populate({
         path: 'menus',
         populate: [{ path: 'meal' }, { path: 'vegetable' }],

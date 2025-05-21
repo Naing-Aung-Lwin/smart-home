@@ -12,6 +12,7 @@ import { BudgetService } from '../budget/budget.service';
 import { IncomeSource } from 'src/schemas/budget-plan/income-source.schema';
 import { ExpenseCategoryService } from 'src/api/budget-plan/expense-category/expense-category.service';
 import { ExpenseCategory } from 'src/schemas/budget-plan/expense-category.schema';
+import { CreateBudgetDto } from 'src/dtos/budget-plan/budget.dto';
 
 @Injectable()
 export class CashFlowService {
@@ -31,7 +32,15 @@ export class CashFlowService {
     } else {
       throw new NotFoundException('Category not found');
     }
-    const budget = await this.budgetSvc.findById(dto.budgetId);
+    const month = dto.date.split('-')[1];
+    const year = dto.date.split('-')[0];
+    if (!month || !year) {
+      throw new NotFoundException('Month or year not found');
+    }
+    const budgetMonth: CreateBudgetDto = {
+      month: `${year}-${month}`,
+    };
+    const budget = await this.budgetSvc.create(budgetMonth);
     if (!budget) throw new NotFoundException('Budget not found');
     if (dto.categoryType === 'IncomeSource') {
       const totalIncome = budget.totalIncome + dto.amount;
@@ -50,6 +59,7 @@ export class CashFlowService {
     }
     const created = new this.cashFlowModel({
       ...dto,
+      budgetId: budget._id,
       categoryId: category._id,
     });
     return created.save();
@@ -93,7 +103,7 @@ export class CashFlowService {
     }
     const cashFlows = await this.cashFlowModel
       .find(query)
-      .sort({ createdAt: -1 })
+      .sort({ date: -1 })
       .lean();
 
     const populatedCashFlows = await Promise.all(

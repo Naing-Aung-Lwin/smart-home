@@ -42,6 +42,7 @@ export class CreateCashFlowDto {
   })
   date: string;
 
+  @IsOptional()
   @IsMongoId()
   @ApiProperty({
     example: 'Budget ID (MongoDB ObjectId)',

@@ -12,7 +12,13 @@ import {
 export class BudgetService {
   constructor(@InjectModel(Budget.name) private model: Model<Budget>) {}
 
-  create(dto: CreateBudgetDto) {
+  async create(dto: CreateBudgetDto) {
+    const existingBudget = await this.model
+      .findOne({ month: dto.month })
+      .exec();
+    if (existingBudget) {
+      return existingBudget;
+    }
     const budget = new this.model(dto);
     return budget.save();
   }
