@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { Colors, Fonts } from "../../constants/theme";
 import ConfirmModalBox from "../common/ConfirmModalBox";
+import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 
 interface Category {
   _id: string;
@@ -51,6 +52,7 @@ const IncomePage: React.FC = () => {
   const [date, setDate] = useState(new Date());
   const [incomes, setIncomes] = useState<Income[]>([]);
   const [totalIncome, setTotalIncome] = useState<number>(0);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const fetchIncomes = async () => {
     setLoading(true);
@@ -76,7 +78,7 @@ const IncomePage: React.FC = () => {
         category: description,
         categoryType: "IncomeSource",
         amount: Number(amount),
-        date: new Date(Date.now()).toISOString().split("T")[0],
+        date: date.toISOString().split("T")[0],
         budgetId: budgets._id || "",
       };
       const response = await api.post("/cash-flows", payload);
@@ -97,7 +99,8 @@ const IncomePage: React.FC = () => {
   const [selectedMonth, setSelectedMonth] = useState<string>(currentMonth);
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
   const getMonthNumber = (monthName: string): string => {
-    const monthIndex = new Date(`${monthName} 1, 2000`).getMonth() + 1; // Jan=0, so add 1
+    const monthIndex = months.findIndex(
+      (month) => month.toLowerCase() === monthName.toLowerCase());
     return monthIndex < 10 ? `0${monthIndex}` : `${monthIndex}`;
   };
   const months = [
@@ -170,13 +173,10 @@ const IncomePage: React.FC = () => {
     setModalVisible(true);
   };
 
-  const onChangeDate = (event, selectedDate) => {
+  const onChangeDate = (_event: DateTimePickerEvent, selectedDate: Date | undefined) => {
+    setShowDatePicker(Platform.OS === "ios");
     if (selectedDate) {
-      const updatedDate = new Date(date);
-      updatedDate.setFullYear(selectedDate.getFullYear());
-      updatedDate.setMonth(selectedDate.getMonth());
-      updatedDate.setDate(selectedDate.getDate());
-      setDate(updatedDate);
+      setDate(selectedDate);
     }
   };
 
@@ -278,6 +278,23 @@ const IncomePage: React.FC = () => {
               />
 
               {/* Choose Date Picker  */}
+              <TouchableOpacity
+                style={[styles.input, { justifyContent: "center" }]}
+                onPress={() => setShowDatePicker(true)}
+              >
+                <Text style={{ color: "#1F2937" }}>
+                  {date ? date.toISOString().split("T")[0] : "Select Date"}
+                </Text>
+              </TouchableOpacity>
+              {showDatePicker && (
+                <DateTimePicker
+                  value={date}
+                  mode="date"
+                  display="default"
+                  onChange={onChangeDate}
+                  maximumDate={new Date()}
+                />
+              )}
 
               <View style={styles.buttonRow}>
                 <TouchableOpacity
