@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import api from "../../api/axios";
+import { Picker } from "@react-native-picker/picker";
 import {
   View,
   Text,
@@ -8,10 +9,15 @@ import {
   TouchableOpacity,
   StyleSheet,
   KeyboardAvoidingView,
+  ActivityIndicator,
   Platform,
+  Modal,
 } from "react-native";
 import { Colors, Fonts } from "../../constants/theme";
-
+import ConfirmModalBox from "../common/ConfirmModalBox";
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
 interface Category {
   _id: string;
   name: string;
@@ -25,19 +31,93 @@ interface Expense {
   budgetId: string;
 }
 
+interface Budget {
+  _id: string;
+  month: string;
+  totalIncome: number;
+  totalExpense: number;
+}
 const ExpensePage: React.FC = () => {
-  const [date, setDate] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [confirmModal, setConfirmModal] = useState(false);
+  const [selectedId, setSelectedId] = useState<string>("");
+  const [budgets, setBudgets] = useState<Budget>({
+    _id: "",
+    month: "",
+    totalIncome: 0,
+    totalExpense: 0,
+  });
   const [reason, setReason] = useState("");
   const [amount, setAmount] = useState("");
-  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [date, setDate] = useState(new Date());
   const [totalExpense, setTotalExpense] = useState<number>(0);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const today = new Date();
+  const currentMonth = today.toLocaleString("default", { month: "long" }); // e.g., "May"
+  const currentYear = today.getFullYear();
+  const [selectedMonth, setSelectedMonth] = useState<string>(currentMonth);
+  const [selectedYear, setSelectedYear] = useState<number>(currentYear);
+  const getMonthNumber = (monthName: string): string => {
+    const monthIndex = months.findIndex(
+      (month) => month.toLowerCase() === monthName.toLowerCase()
+    );
+    return monthIndex + 1 < 10 ? `0${monthIndex + 1}` : `${monthIndex + 1}`;
+  };
+  const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+  const years = [2023, 2024, 2025];
 
   useEffect(() => {
-    fetchExpenses();
-  }, []);
+    fetchBudget();
+  }, [selectedMonth, selectedYear]);
+
+  const fetchBudget = async () => {
+    setLoading(true);
+    try {
+      const formattedDate = `${selectedYear}-${getMonthNumber(selectedMonth)}`;
+      const response = await api.get(`/budget?month=${formattedDate}`);
+      if (response.data && response.data.length > 0) {
+        setBudgets(response.data[0]);
+      } else {
+        const budgetData = await api.post(`/budget`, {
+          month: formattedDate,
+          totalIncome: 0,
+          totalExpense: 0,
+        });
+        if (budgetData.data && budgetData.data.length > 0) {
+          setBudgets(budgetData.data[0]);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch budget", error);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (budgets._id) fetchExpenses();
+  }, [budgets]);
 
   const fetchExpenses = async () => {
-    const response = await api.get("/cash-flows?categoryType=ExpenseCategory");
+    setLoading(true);
+    const response = await api.get(
+      `/cash-flows?categoryType=ExpenseCategory&budgetId=${budgets._id}`
+    );
     setExpenses(response.data);
     setTotalExpense(
       response.data.reduce(
@@ -45,24 +125,63 @@ const ExpensePage: React.FC = () => {
         0
       )
     );
+    setLoading(false);
   };
 
   const handleAddExpense = async () => {
     if (!reason || !amount) return;
-    const payload = {
-      category: reason,
-      categoryType: "ExpenseCategory",
-      amount: Number(amount),
-      date: new Date(Date.now()).toISOString().split("T")[0],
-      budgetId: "6819cf9fa26a25a955c65feb",
-    };
-    const response = await api.post("/cash-flows", payload);
 
-    if (response) {
-      setDate("");
-      setReason("");
-      setAmount("");
+    if (budgets._id) {
+      setLoading(true);
+      const payload = {
+        category: reason,
+        categoryType: "ExpenseCategory",
+        amount: Number(amount),
+        date: date.toISOString().split("T")[0],
+        budgetId: budgets._id || "",
+      };
+      const response = await api.post("/cash-flows", payload);
+
+      if (response) {
+        setAmount("");
+        setReason("");
+        fetchExpenses();
+      }
+      setModalVisible(false);
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setLoading(true);
+    try {
+      await api.delete(`/cash-flows/${selectedId}`);
       fetchExpenses();
+    } catch (error) {
+      console.error("Error deleting menu:", error);
+    } finally {
+      setSelectedId("");
+      setConfirmModal(false);
+      setLoading(false);
+    }
+  };
+
+  const deleteFunc = (id: string) => {
+    setSelectedId(id);
+    setConfirmModal(true);
+  };
+
+  const handleAdd = () => {
+    setModalVisible(true);
+  };
+
+  const onChangeDate = (
+    _event: DateTimePickerEvent,
+    selectedDate: Date | undefined
+  ) => {
+    setShowDatePicker(Platform.OS === "ios");
+    if (selectedDate) {
+      setDate(selectedDate);
     }
   };
 
@@ -71,46 +190,141 @@ const ExpensePage: React.FC = () => {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       style={styles.container}
     >
-      <View style={styles.card}>
-        <TextInput
-          value={amount}
-          onChangeText={setAmount}
-          placeholder="Amount"
-          keyboardType="numeric"
-          style={styles.input}
-        />
-        <TextInput
-          value={reason}
-          onChangeText={setReason}
-          placeholder="Reason"
-          style={styles.input}
-        />
+      <View style={styles.filterContainer}>
+        <View style={styles.pickerWrapper}>
+          <Text style={styles.filterLabel}>Month</Text>
+          <Picker
+            selectedValue={selectedMonth}
+            style={styles.picker}
+            onValueChange={(itemValue) => setSelectedMonth(itemValue)}
+          >
+            {months.map((month) => (
+              <Picker.Item label={month} value={month} key={month} />
+            ))}
+          </Picker>
+        </View>
 
-        <TouchableOpacity style={styles.addButton} onPress={handleAddExpense}>
-          <Text style={styles.addButtonText}>Add Expense</Text>
-        </TouchableOpacity>
+        <View style={styles.pickerWrapper}>
+          <Text style={styles.filterLabel}>Year</Text>
+          <Picker
+            selectedValue={selectedYear}
+            style={styles.picker}
+            onValueChange={(itemValue) => setSelectedYear(itemValue)}
+          >
+            {years.map((year) => (
+              <Picker.Item label={year.toString()} value={year} key={year} />
+            ))}
+          </Picker>
+        </View>
       </View>
 
-      <View style={styles.summary}>
-        <Text style={[styles.summaryText, { color: "red" }]}>
-          Total: {totalExpense} MMK
-        </Text>
-      </View>
+      {loading ? (
+        <ActivityIndicator size="large" color={Colors.primary} />
+      ) : (
+        <>
+          <View style={styles.summary}>
+            <Text style={[styles.summaryText, { color: "red" }]}>
+              Total: {totalExpense} MMK
+            </Text>
 
-      <FlatList
-        data={expenses}
-        keyExtractor={(item) => item._id}
-        contentContainerStyle={styles.listContainer}
-        renderItem={({ item }) => (
-          <View style={styles.expenseItem}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.expenseReason}>{item?.categoryId?.name}</Text>
-              <Text style={styles.expenseDate}>{item.date}</Text>
-            </View>
-            <Text style={styles.expenseAmount}>- {item.amount} MMK</Text>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.addNewButton]}
+              onPress={handleAdd}
+            >
+              <Text style={styles.buttonText}>Add New</Text>
+            </TouchableOpacity>
           </View>
-        )}
+          <FlatList
+            data={expenses}
+            keyExtractor={(item) => item._id}
+            contentContainerStyle={styles.listContainer}
+            renderItem={({ item }) => (
+              <View style={styles.expenseItem}>
+                <View>
+                  <Text style={[styles.summaryText, { color: "red" }]}>
+                    Total: {totalExpense} MMK
+                  </Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.expenseReason}>
+                      {item?.categoryId?.name}
+                    </Text>
+                    <Text style={styles.expenseDate}>{item.date}</Text>
+                  </View>
+                </View>
+                <TouchableOpacity onPress={() => deleteFunc(item._id)}>
+                  <Text style={styles.deleteIcon}>🗑️</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          />
+        </>
+      )}
+      <ConfirmModalBox
+        isModalVisible={confirmModal}
+        setIsModalVisible={setConfirmModal}
+        isLoading={loading}
+        handleSubmit={handleDelete}
       />
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <View style={styles.card}>
+              <TextInput
+                value={amount}
+                onChangeText={setAmount}
+                placeholder="Amount"
+                keyboardType="numeric"
+                style={styles.input}
+              />
+              <TextInput
+                value={reason}
+                onChangeText={setReason}
+                placeholder="Reason"
+                style={styles.input}
+              />
+
+              <TouchableOpacity
+                style={[styles.input, { justifyContent: "center" }]}
+                onPress={() => setShowDatePicker(true)}
+              >
+                <Text style={{ color: "#1F2937" }}>
+                  {date ? date.toISOString().split("T")[0] : "Select Date"}
+                </Text>
+              </TouchableOpacity>
+              {showDatePicker && (
+                <DateTimePicker
+                  value={date}
+                  mode="date"
+                  display="default"
+                  onChange={onChangeDate}
+                  maximumDate={new Date()}
+                />
+              )}
+
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={[styles.halfButton, styles.cancelButton]}
+                  onPress={() => setModalVisible(false)}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.halfButton, styles.addButton]}
+                  onPress={handleAddExpense}
+                >
+                  <Text style={styles.addButtonText}>Add expense</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 };
@@ -121,33 +335,34 @@ const styles = StyleSheet.create({
     backgroundColor: "#F7F8FA",
     padding: 5,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#1E293B",
-    marginBottom: 10,
+  filterContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  pickerWrapper: {
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  filterLabel: {
+    fontSize: Fonts.size.text,
+    color: "#6B7280",
+    marginBottom: 4,
+  },
+  picker: {
+    height: 55,
+    backgroundColor: Colors.white,
+    borderRadius: 5,
   },
   card: {
     backgroundColor: "#fff",
     padding: 16,
-    marginBottom: 16,
     elevation: 4,
   },
   input: {
     backgroundColor: "#F1F5F9",
     padding: 8,
     marginBottom: 10,
-    fontSize: Fonts.size.text,
-  },
-  addButton: {
-    backgroundColor: Colors.primary,
-    paddingVertical: 8,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  addButtonText: {
-    color: "#fff",
-    fontWeight: "600",
     fontSize: Fonts.size.text,
   },
   summary: {
@@ -157,8 +372,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   summaryText: {
-    fontSize: Fonts.size.subTitle,
+    fontSize: Fonts.size.text,
     fontWeight: "bold",
+    color: Colors.primary,
   },
   listContainer: {
     paddingBottom: 80,
@@ -172,7 +388,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     elevation: 2,
   },
-  expenseReason: {
+  expenseDescription: {
     fontSize: Fonts.size.subTitle,
     fontWeight: "500",
     color: "#1F2937",
@@ -182,10 +398,68 @@ const styles = StyleSheet.create({
     color: "#6B7280",
   },
   expenseAmount: {
-    fontSize: Fonts.size.text,
+    fontSize: Fonts.size.subTitle,
     fontWeight: "600",
-    color: "#DC2626",
+    color: Colors.primary,
     alignSelf: "center",
+  },
+  deleteIcon: {
+    fontSize: 18,
+    color: Colors.danger,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  modalContent: {
+    backgroundColor: Colors.white,
+    margin: 20,
+    padding: 20,
+    borderRadius: 10,
+  },
+  actionButton: {
+    paddingVertical: 4,
+    paddingHorizontal: 20,
+    borderRadius: 6,
+  },
+  addNewButton: {
+    backgroundColor: Colors.primary,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: Fonts.size.button,
+  },
+
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 10, // If your React Native version doesn’t support gap, use marginRight on the first button
+    marginTop: 15,
+  },
+
+  halfButton: {
+    flex: 1,
+    paddingVertical: 7,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 10,
+  },
+  addButton: {
+    backgroundColor: Colors.primary,
+  },
+  cancelButton: {
+    backgroundColor: "transparent",
+    borderWidth: 1,
+    borderColor: Colors.primary,
+  },
+  cancelButtonText: {
+    fontSize: Fonts.size.button,
+    color: Colors.primary,
+  },
+  addButtonText: {
+    color: Colors.white,
+    fontSize: Fonts.size.button,
   },
 });
 

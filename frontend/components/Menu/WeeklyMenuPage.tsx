@@ -7,11 +7,15 @@ import {
   StyleSheet,
   ActivityIndicator,
   TouchableOpacity,
+  Platform,
 } from "react-native";
 import { Colors, Fonts } from "../../constants/theme";
 import api from "../../api/axios";
 import commonMixin from "../../composable/common";
 import ChooseMealBox from "./ChooseMealBox";
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
 
 interface Curry {
   type: string;
@@ -37,13 +41,46 @@ export default function WeeklyMenuScreen() {
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [regenerateDate, setRegenrateDate] = useState<string>("");
+  const [showFromDate, setShowFromDate] = useState(false);
+  const [showToDate, setShowToDate] = useState(false);
+  const [fromDate, setFromDate] = useState(getCurrentWeekRange().start);
+  const [toDate, setToDate] = useState(getCurrentWeekRange().end);
+
+  function getCurrentWeekRange() {
+    const today = new Date();
+
+    const day = today.getDay();
+
+    const diffToMonday = day === 0 ? -6 : 1 - day;
+
+    // Get Monday
+    const monday = new Date(today);
+    monday.setDate(today.getDate() + diffToMonday);
+
+    // Get Sunday
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+
+    // Format helper: dd-mm-yyyy
+    const formatDate = (date: any) => {
+      const d = String(date.getDate()).padStart(2, "0");
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const y = date.getFullYear();
+      return `${y}-${m}-${d}`;
+    };
+
+    return {
+      start: formatDate(monday),
+      end: formatDate(sunday),
+    };
+  }
 
   const generateMenu = async () => {
     try {
       setLoading(true);
       const response = await api.post("/meal-plan/generate", {
-        fromDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
-        toDate: new Date(Date.now() + 86400000 * 7).toISOString().split("T")[0],
+        fromDate,
+        toDate,
       });
 
       if (response.data) {
@@ -71,12 +108,6 @@ export default function WeeklyMenuScreen() {
   const fetchWeeklyMenuList = async () => {
     try {
       setLoading(true);
-      const fromDate = new Date(Date.now() + 86400000)
-        .toISOString()
-        .split("T")[0];
-      const toDate = new Date(Date.now() + 86400000 * 7)
-        .toISOString()
-        .split("T")[0];
       const response = await api.get(
         `/meal-plan?fromDate=${fromDate}&toDate=${toDate}`
       );
@@ -115,8 +146,68 @@ export default function WeeklyMenuScreen() {
     setModalVisible(true);
   };
 
+  const onChangeFromDate = (
+    _event: DateTimePickerEvent,
+    selectedDate: Date | undefined
+  ) => {
+    setShowFromDate(Platform.OS === "ios");
+    if (selectedDate) {
+      setFromDate(selectedDate.toISOString().split("T")[0]);
+    }
+  };
+
+  const onChangeToDate = (
+    _event: DateTimePickerEvent,
+    selectedDate: Date | undefined
+  ) => {
+    setShowToDate(Platform.OS === "ios");
+    if (selectedDate) {
+      setToDate(selectedDate.toISOString().split("T")[0]);
+    }
+  };
+
   return (
     <View style={styles.container}>
+      <View style={styles.filterContainer}>
+        <View style={styles.pickerWrapper}>
+          <TouchableOpacity
+            style={[styles.input, { justifyContent: "center" }]}
+            onPress={() => setShowFromDate(true)}
+          >
+            <Text style={{ color: "#1F2937" }}>
+              {fromDate || "Select Date"}
+            </Text>
+          </TouchableOpacity>
+          {showFromDate && (
+            <DateTimePicker
+              value={new Date(fromDate)}
+              mode="date"
+              display="default"
+              onChange={onChangeFromDate}
+              maximumDate={new Date()}
+            />
+          )}
+        </View>
+
+        <View style={styles.pickerWrapper}>
+          <TouchableOpacity
+            style={[styles.input, { justifyContent: "center" }]}
+            onPress={() => setShowToDate(true)}
+          >
+            <Text style={{ color: "#1F2937" }}>{toDate || "Select Date"}</Text>
+          </TouchableOpacity>
+          {showToDate && (
+            <DateTimePicker
+              value={new Date(toDate)}
+              mode="date"
+              display="default"
+              onChange={onChangeToDate}
+              maximumDate={new Date()}
+            />
+          )}
+        </View>
+      </View>
+
       <Button
         title="🎲 Generate New Menu"
         onPress={generateMenu}
@@ -169,6 +260,31 @@ export default function WeeklyMenuScreen() {
 }
 
 const styles = StyleSheet.create({
+  input: {
+    backgroundColor: "#F1F5F9",
+    padding: 8,
+    marginBottom: 10,
+    fontSize: Fonts.size.text,
+  },
+  filterContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  pickerWrapper: {
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  filterLabel: {
+    fontSize: Fonts.size.text,
+    color: "#6B7280",
+    marginBottom: 4,
+  },
+  picker: {
+    height: 55,
+    backgroundColor: Colors.white,
+    borderRadius: 5,
+  },
   container: {
     paddingTop: 30,
     paddingHorizontal: 20,

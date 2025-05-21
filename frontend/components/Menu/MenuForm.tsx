@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   picker: {
-    height: 40,
+    height: 60,
     color: "#333",
     fontSize: Fonts.size.text,
   },

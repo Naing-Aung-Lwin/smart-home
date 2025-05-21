@@ -10,11 +10,14 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
   Modal,
 } from "react-native";
 import { Colors, Fonts } from "../../constants/theme";
 import ConfirmModalBox from "../common/ConfirmModalBox";
-import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
 
 interface Category {
   _id: string;
@@ -100,8 +103,9 @@ const IncomePage: React.FC = () => {
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
   const getMonthNumber = (monthName: string): string => {
     const monthIndex = months.findIndex(
-      (month) => month.toLowerCase() === monthName.toLowerCase());
-    return monthIndex < 10 ? `0${monthIndex}` : `${monthIndex}`;
+      (month) => month.toLowerCase() === monthName.toLowerCase()
+    );
+    return monthIndex + 1 < 10 ? `0${monthIndex + 1}` : `${monthIndex + 1}`;
   };
   const months = [
     "January",
@@ -173,7 +177,10 @@ const IncomePage: React.FC = () => {
     setModalVisible(true);
   };
 
-  const onChangeDate = (_event: DateTimePickerEvent, selectedDate: Date | undefined) => {
+  const onChangeDate = (
+    _event: DateTimePickerEvent,
+    selectedDate: Date | undefined
+  ) => {
     setShowDatePicker(Platform.OS === "ios");
     if (selectedDate) {
       setDate(selectedDate);
@@ -212,41 +219,46 @@ const IncomePage: React.FC = () => {
           </Picker>
         </View>
       </View>
+      {loading ? (
+        <ActivityIndicator size="large" color={Colors.primary} />
+      ) : (
+        <>
+          <View style={styles.summary}>
+            <Text style={styles.summaryText}>Total: {totalIncome} MMK</Text>
 
-      <View style={styles.summary}>
-        <Text style={styles.summaryText}>Total: {totalIncome} MMK</Text>
-
-        <TouchableOpacity
-          style={[styles.actionButton, styles.addNewButton]}
-          onPress={handleAdd}
-        >
-          <Text style={styles.buttonText}>Add New</Text>
-        </TouchableOpacity>
-      </View>
-
-      <FlatList
-        data={incomes}
-        keyExtractor={(item) => item._id}
-        contentContainerStyle={styles.listContainer}
-        renderItem={({ item }) => (
-          <View style={styles.incomeItem}>
-            <View>
-              <Text style={styles.incomeAmount}>+ {item.amount} MMK</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.incomeDescription}>
-                  {item?.categoryId?.name}
-                </Text>
-                <Text style={styles.incomeDate}>{item.date}</Text>
-              </View>
-            </View>
-            <View>
-              <TouchableOpacity onPress={() => deleteFunc(item._id)}>
-                <Text style={styles.deleteIcon}>🗑️</Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.addNewButton]}
+              onPress={handleAdd}
+            >
+              <Text style={styles.buttonText}>Add New</Text>
+            </TouchableOpacity>
           </View>
-        )}
-      />
+
+          <FlatList
+            data={incomes}
+            keyExtractor={(item) => item._id}
+            contentContainerStyle={styles.listContainer}
+            renderItem={({ item }) => (
+              <View style={styles.incomeItem}>
+                <View>
+                  <Text style={styles.incomeAmount}>+ {item.amount} MMK</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.incomeDescription}>
+                      {item?.categoryId?.name}
+                    </Text>
+                    <Text style={styles.incomeDate}>{item.date}</Text>
+                  </View>
+                </View>
+                <View>
+                  <TouchableOpacity onPress={() => deleteFunc(item._id)}>
+                    <Text style={styles.deleteIcon}>🗑️</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+          />
+        </>
+      )}
       <ConfirmModalBox
         isModalVisible={confirmModal}
         setIsModalVisible={setConfirmModal}
@@ -277,7 +289,6 @@ const IncomePage: React.FC = () => {
                 style={styles.input}
               />
 
-              {/* Choose Date Picker  */}
               <TouchableOpacity
                 style={[styles.input, { justifyContent: "center" }]}
                 onPress={() => setShowDatePicker(true)}

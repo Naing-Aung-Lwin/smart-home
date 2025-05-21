@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
     color: Colors.primary,
   },
   input: {
-    height: 35,
+    height: 50,
     borderColor: Colors.lightGray,
     borderWidth: 1,
     paddingHorizontal: 15,

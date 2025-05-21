@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+} from "react-native";
 import { Colors, Fonts } from "../../constants/theme";
 import api from "../../api/axios";
 import { Picker } from "@react-native-picker/picker";
@@ -28,6 +34,7 @@ const months = [
 const years = [2023, 2024, 2025];
 
 const BudgetPage: React.FC = () => {
+  const [loading, setLoading] = useState(false);
   const [budgets, setBudgets] = useState<Budget>({
     _id: "",
     month: "",
@@ -41,8 +48,10 @@ const BudgetPage: React.FC = () => {
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
 
   const getMonthNumber = (monthName: string): string => {
-    const monthIndex = new Date(`${monthName} 1, 2000`).getMonth() + 1; // Jan=0, so add 1
-    return monthIndex < 10 ? `0${monthIndex}` : `${monthIndex}`;
+    const monthIndex = months.findIndex(
+      (month) => month.toLowerCase() === monthName.toLowerCase()
+    );
+    return monthIndex + 1 < 10 ? `0${monthIndex + 1}` : `${monthIndex + 1}`;
   };
 
   useEffect(() => {
@@ -50,6 +59,7 @@ const BudgetPage: React.FC = () => {
   }, [selectedMonth, selectedYear]);
 
   const fetchBudget = async () => {
+    setLoading(true);
     try {
       const formattedDate = `${selectedYear}-${getMonthNumber(selectedMonth)}`;
       const response = await api.get(`/budget?month=${formattedDate}`);
@@ -60,6 +70,8 @@ const BudgetPage: React.FC = () => {
       }
     } catch (error) {
       console.error("Failed to fetch budget", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -96,38 +108,44 @@ const BudgetPage: React.FC = () => {
         </View>
       </View>
 
-      {/* Budget Cards */}
-      <View style={styles.card}>
-        <Text style={styles.label}>Total Income</Text>
-        <Text style={[styles.amount, { color: "#16A34A" }]}>
-          + {budgets.totalIncome} MMK
-        </Text>
-      </View>
+      {loading ? (
+        <ActivityIndicator size="large" color={Colors.primary} />
+      ) : (
+        <>
+          {/* Budget Cards */}
+          <View style={styles.card}>
+            <Text style={styles.label}>Total Income</Text>
+            <Text style={[styles.amount, { color: "#16A34A" }]}>
+              + {budgets.totalIncome} MMK
+            </Text>
+          </View>
 
-      <View style={styles.card}>
-        <Text style={styles.label}>Total Expenses</Text>
-        <Text style={[styles.amount, { color: "#DC2626" }]}>
-          - {budgets.totalExpense} MMK
-        </Text>
-      </View>
+          <View style={styles.card}>
+            <Text style={styles.label}>Total Expenses</Text>
+            <Text style={[styles.amount, { color: "#DC2626" }]}>
+              - {budgets.totalExpense} MMK
+            </Text>
+          </View>
 
-      <View style={styles.card}>
-        <Text style={styles.label}>Remaining Balance</Text>
-        <Text
-          style={[
-            styles.amount,
-            {
-              color:
-                budgets.totalIncome - budgets.totalExpense >= 0
-                  ? "#0F766E"
-                  : "#DC2626",
-            },
-          ]}
-        >
-          {budgets.totalIncome - budgets.totalExpense >= 0 ? "+ " : "- "}
-          {Math.abs(budgets.totalIncome - budgets.totalExpense)} MMK
-        </Text>
-      </View>
+          <View style={styles.card}>
+            <Text style={styles.label}>Remaining Balance</Text>
+            <Text
+              style={[
+                styles.amount,
+                {
+                  color:
+                    budgets.totalIncome - budgets.totalExpense >= 0
+                      ? "#0F766E"
+                      : "#DC2626",
+                },
+              ]}
+            >
+              {budgets.totalIncome - budgets.totalExpense >= 0 ? "+ " : "- "}
+              {Math.abs(budgets.totalIncome - budgets.totalExpense)} MMK
+            </Text>
+          </View>
+        </>
+      )}
     </ScrollView>
   );
 };
