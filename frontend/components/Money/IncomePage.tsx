@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import api from "../../api/axios";
 import { Picker } from "@react-native-picker/picker";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 import {
   View,
   Text,
@@ -38,7 +41,8 @@ interface Budget {
   totalIncome: number;
   totalExpense: number;
 }
-
+dayjs.extend(utc);
+dayjs.extend(timezone);
 const IncomePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -81,7 +85,7 @@ const IncomePage: React.FC = () => {
         category: description,
         categoryType: "IncomeSource",
         amount: Number(amount),
-        date: date.toISOString().split("T")[0],
+        date: dayjs.utc(date).tz("Asia/Yangon").format("YYYY-MM-DD HH:mm:ss"),
         budgetId: budgets._id || "",
       };
       const response = await api.put(`/cash-flows/${selectedId}`, payload);
@@ -105,7 +109,7 @@ const IncomePage: React.FC = () => {
         category: description,
         categoryType: "IncomeSource",
         amount: Number(amount),
-        date: date.toISOString(),
+        date: dayjs.utc(date).tz("Asia/Yangon").format("YYYY-MM-DD HH:mm:ss"),
         budgetId: budgets._id || "",
       };
       const response = await api.post("/cash-flows", payload);
@@ -145,8 +149,11 @@ const IncomePage: React.FC = () => {
     "November",
     "December",
   ];
+
   const years = [
-    2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030,
+    new Date().getFullYear() - 2,
+    new Date().getFullYear() - 1,
+    new Date().getFullYear(),
   ];
 
   useEffect(() => {
@@ -273,9 +280,7 @@ const IncomePage: React.FC = () => {
                     <Text style={styles.incomeDescription}>
                       {item?.categoryId?.name}
                     </Text>
-                    <Text style={styles.incomeDate}>
-                      {item.date.toLocaleString()}
-                    </Text>
+                    <Text style={styles.incomeDate}>{item.date}</Text>
                   </View>
                 </View>
                 <View>
