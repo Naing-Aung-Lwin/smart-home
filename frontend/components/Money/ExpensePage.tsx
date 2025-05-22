@@ -18,6 +18,11 @@ import ConfirmModalBox from "../common/ConfirmModalBox";
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+dayjs.extend(utc);
+dayjs.extend(timezone);
 interface Category {
   _id: string;
   name: string;
@@ -80,8 +85,11 @@ const ExpensePage: React.FC = () => {
     "November",
     "December",
   ];
+
   const years = [
-    2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030,
+    new Date().getFullYear() - 2,
+    new Date().getFullYear() - 1,
+    new Date().getFullYear(),
   ];
 
   useEffect(() => {
@@ -130,7 +138,7 @@ const ExpensePage: React.FC = () => {
         category: reason,
         categoryType: "ExpenseCategory",
         amount: Number(amount),
-        date: date.toISOString(),
+        date: dayjs.utc(date).tz("Asia/Yangon").format("YYYY-MM-DD HH:mm:ss"),
         budgetId: budgets._id || "",
       };
       const response = await api.post("/cash-flows", payload);
@@ -180,7 +188,7 @@ const ExpensePage: React.FC = () => {
         category: reason,
         categoryType: "ExpenseCategory",
         amount: Number(amount),
-        date: date.toISOString(),
+        date: dayjs.utc(date).tz("Asia/Yangon").format("YYYY-MM-DD HH:mm:ss"),
         budgetId: budgets._id || "",
       };
       const response = await api.put(`/cash-flows/${selectedId}`, payload);
@@ -361,6 +369,11 @@ const ExpensePage: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  expenseReason: {
+    fontSize: Fonts.size.subTitle,
+    fontWeight: "500",
+    color: "#1F2937",
+  },
   container: {
     flex: 1,
     backgroundColor: "#F7F8FA",
