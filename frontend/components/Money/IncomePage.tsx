@@ -105,7 +105,7 @@ const IncomePage: React.FC = () => {
         category: description,
         categoryType: "IncomeSource",
         amount: Number(amount),
-        date: date.toISOString().split("T")[0],
+        date: date.toISOString(),
         budgetId: budgets._id || "",
       };
       const response = await api.post("/cash-flows", payload);
@@ -162,15 +162,6 @@ const IncomePage: React.FC = () => {
       const response = await api.get(`/budget?month=${formattedDate}`);
       if (response.data && response.data.length > 0) {
         setBudgets(response.data[0]);
-      } else {
-        const budgetData = await api.post(`/budget`, {
-          month: formattedDate,
-          totalIncome: 0,
-          totalExpense: 0,
-        });
-        if (budgetData.data && budgetData.data.length > 0) {
-          setBudgets(budgetData.data[0]);
-        }
       }
     } catch (error) {
       console.error("Failed to fetch budget", error);
@@ -280,7 +271,9 @@ const IncomePage: React.FC = () => {
                     <Text style={styles.incomeDescription}>
                       {item?.categoryId?.name}
                     </Text>
-                    <Text style={styles.incomeDate}>{item.date}</Text>
+                    <Text style={styles.incomeDate}>
+                      {item.date.toLocaleString()}
+                    </Text>
                   </View>
                 </View>
                 <View>
@@ -332,13 +325,13 @@ const IncomePage: React.FC = () => {
                 onPress={() => setShowDatePicker(true)}
               >
                 <Text style={{ color: "#1F2937" }}>
-                  {date ? date.toISOString().split("T")[0] : "Select Date"}
+                  {date ? date.toLocaleString() : "Select Date & Time"}
                 </Text>
               </TouchableOpacity>
               {showDatePicker && (
                 <DateTimePicker
                   value={date}
-                  mode="date"
+                  mode="datetime"
                   display="default"
                   onChange={onChangeDate}
                   maximumDate={new Date()}
