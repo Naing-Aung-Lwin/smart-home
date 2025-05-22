@@ -177,7 +177,6 @@ export default function MenuPage() {
             );
           })}
         </View>
-        <br />
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.searchInput}
