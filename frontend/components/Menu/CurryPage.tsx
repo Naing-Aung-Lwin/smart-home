@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import api from "../../api/axios";
+import Ionicons from "react-native-vector-icons/Ionicons";
 import {
   View,
   Text,
@@ -7,7 +8,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   FlatList,
-  ScrollView,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
@@ -24,6 +24,8 @@ type Menu = {
 export default function MenuPage() {
   const [loading, setLoading] = useState(false);
   const [confirmModal, setConfirmModal] = useState(false);
+  const [searchName, setSearchName] = useState<string>("");
+  const [searchType, setSearchType] = useState<string>("");
   const [selectedId, setSelectedId] = useState<string>("");
   const [adding, setAdding] = useState(false);
   const [menus, setMenus] = useState<Menu[]>([]);
@@ -82,7 +84,24 @@ export default function MenuPage() {
   const fetchMenu = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/curry");
+      let search = "";
+      if (searchName && searchType)
+        search = `type=${searchType}&name=${searchName}`;
+
+      if (searchType) search = `type=${searchType}`;
+
+      if (searchName) search = `name=${searchName}`;
+
+      if (searchName) {
+        const response = await api.get(`/curry?${search}`);
+        setMenus(response.data);
+      } else {
+        const response = await api.get("/curry");
+        setMenus(response.data);
+      }
+      const response = await api.get(
+        `/curry?type=${searchType}&name=${searchName}`
+      );
       setMenus(response.data);
     } catch (error) {
       console.error("Error fetching menus:", error);
@@ -114,14 +133,40 @@ export default function MenuPage() {
     setConfirmModal(true);
   };
 
+  const onSearch = () => {
+    fetchMenu();
+  };
+
   return (
     <>
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <Text style={styles.title}>🍽️ Add New Curry</Text>
-
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.searchInput}
+            value={searchName}
+            placeholder="Name"
+            onChangeText={setSearchName}
+            placeholderTextColor="#9CA3AF"
+          />
+          <TouchableOpacity onPress={onSearch} style={styles.iconWrapper}>
+            <Ionicons name="search" size={22} color="#6B7280" />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.searchInput}
+            value={searchType}
+            placeholder="Type"
+            onChangeText={setSearchType}
+            placeholderTextColor="#9CA3AF"
+          />
+          <TouchableOpacity onPress={onSearch} style={styles.iconWrapper}>
+            <Ionicons name="search" size={22} color="#6B7280" />
+          </TouchableOpacity>
+        </View>
         {!viewAll && (
           <>
             <View style={styles.radioGroup}>
@@ -313,5 +358,26 @@ const styles = StyleSheet.create({
   deleteIcon: {
     fontSize: 18,
     color: Colors.danger,
+  },
+  disabledButton: {
+    backgroundColor: "#ccc",
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F1F5F9",
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    marginBottom: 20,
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: 10,
+    fontSize: 16,
+    color: "#1F2937",
+    height: 50,
+  },
+  iconWrapper: {
+    paddingLeft: 10,
   },
 });

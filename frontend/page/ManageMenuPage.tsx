@@ -1,7 +1,6 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import WeeklyMenuPage from "../components/Menu/WeeklyMenuPage";
-import ShoppingListPage from "../components/Menu/ShoppingListPage";
 import MenuPage from "../components/Menu/MenuPage";
 import CurryPage from "../components/Menu/CurryPage";
 import { Ionicons } from "@expo/vector-icons";
@@ -17,7 +16,6 @@ export default function MainMenuPage() {
           let iconName: keyof typeof Ionicons.glyphMap = "list";
 
           if (route.name === "Weekly Menu") iconName = "restaurant";
-          else if (route.name === "Shopping") iconName = "cart";
           else if (route.name === "Recipes") iconName = "book";
           else if (route.name === "Menu List") iconName = "menu";
 
@@ -54,11 +52,6 @@ export default function MainMenuPage() {
       <Tab.Screen
         name="Curry List"
         component={CurryPage}
-        options={{ headerShown: false }}
-      />
-      <Tab.Screen
-        name="Shopping"
-        component={ShoppingListPage}
         options={{ headerShown: false }}
       />
     </Tab.Navigator>
