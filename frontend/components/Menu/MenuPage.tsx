@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import api from "../../api/axios";
+import Ionicons from "react-native-vector-icons/Ionicons";
 import {
   View,
   Text,
   StyleSheet,
+  TextInput,
   TouchableOpacity,
   FlatList,
   KeyboardAvoidingView,
@@ -31,6 +33,7 @@ export default function MenuPage() {
   const [loading, setLoading] = useState(false);
   const [confirmModal, setConfirmModal] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [searchName, setSearchName] = useState<string>("");
   const [selectedId, setSelectedId] = useState<string>("");
   const [menus, setMenus] = useState<MenlPlan[]>([]);
   const [mealCurry, setMealCurry] = useState<Menu[]>([]);
@@ -128,7 +131,9 @@ export default function MenuPage() {
   const fetchMenu = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/menu");
+      let search = "";
+      if (searchName) search = `name=${searchName}`;
+      const response = await api.get(`/menu?${search}`);
       setMenus(response.data);
     } catch (error) {
       console.error("Error fetching menus:", error);
@@ -170,12 +175,28 @@ export default function MenuPage() {
     setModalVisible(true);
   };
 
+  const onSearch = () => {
+    fetchMenu();
+  };
+
   return (
     <>
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            value={searchName}
+            placeholder="Meal or Vegetable"
+            onChangeText={setSearchName}
+            placeholderTextColor="#9CA3AF"
+          />
+          <TouchableOpacity onPress={onSearch} style={styles.iconWrapper}>
+            <Ionicons name="search" size={22} color="#6B7280" />
+          </TouchableOpacity>
+        </View>
         <View style={styles.menuHeader}>
           <Text style={styles.menusTitle}>All Menus</Text>
           <TouchableOpacity
@@ -335,5 +356,23 @@ const styles = StyleSheet.create({
     margin: 20,
     padding: 20,
     borderRadius: 10,
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F1F5F9",
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    marginBottom: 20,
+  },
+  input: {
+    flex: 1,
+    paddingVertical: 10,
+    fontSize: 16,
+    color: "#1F2937",
+    height: 50,
+  },
+  iconWrapper: {
+    paddingLeft: 10,
   },
 });

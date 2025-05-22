@@ -1,16 +1,19 @@
 import { Modal, View, Text, Button, StyleSheet } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { Colors, Fonts } from "../../constants/theme";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import api from "../../api/axios";
 
 interface Props {
   modalVisible: boolean;
   setModalVisible: (visible: boolean) => void;
   isLoading: boolean;
-  menus: Menu[];
   handleRegenerate: (id: string) => void;
+  selectedMenu: MealPlan | null;
 }
+
 interface Curry {
+  _id: string;
   type: string;
   name: string;
 }
@@ -21,7 +24,7 @@ interface Menu {
   vegetable: Curry;
 }
 
-interface MeanPlan {
+interface MealPlan {
   _id: string;
   date: string;
   menus: Menu[];
@@ -31,38 +34,81 @@ export default function ChooseMealBox({
   modalVisible,
   setModalVisible,
   isLoading,
-  menus,
   handleRegenerate,
+  selectedMenu,
 }: Props) {
-  const handleSubmit = () => {
-    handleRegenerate(selectedMenuId);
+  const handleSubmit = async () => {
+    const response = await api.post("/menu", {
+      meal: selectedMealId,
+      vegetable: selectedVegeId,
+    });
+    if (response.data._id) {
+      handleRegenerate(response.data._id);
+    }
   };
-  const [selectedMenuId, setSelectedMenuId] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [updateId, setUpdateId] = useState("");
+  const [selectedMealId, setSelectedMealId] = useState("");
+  const [selectedVegeId, setSelectedVegeId] = useState("");
+  const [mealList, setMealList] = useState<Curry[]>([]);
+  const [vegeList, setVegeList] = useState<Curry[]>([]);
+
+  const fetchMeal = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/curry?type=meal");
+      setMealList(response.data);
+    } catch (error) {
+      console.error("Error fetching menus:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchVegetable = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/curry?type=vegetable");
+      setVegeList(response.data);
+    } catch (error) {
+      console.error("Error fetching menus:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMeal();
+    fetchVegetable();
+    if (selectedMenu && selectedMenu?.menus && selectedMenu?.menus.length > 0) {
+      setUpdateId(selectedMenu.menus[0]._id);
+      setSelectedMealId(selectedMenu.menus[0].meal._id);
+      setSelectedVegeId(selectedMenu.menus[0].vegetable._id);
+    }
+  }, [selectedMenu]);
 
   return (
     <Modal visible={modalVisible} transparent animationType="slide">
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>Update Menu</Text>
-
           <Text>Choose Meal</Text>
           <View style={styles.pickerContainer}>
             <Picker
-              selectedValue={selectedMenuId}
+              selectedValue={selectedMealId}
               onValueChange={(itemValue: string) =>
-                setSelectedMenuId(itemValue)
+                setSelectedMealId(itemValue)
               }
               style={styles.picker}
               dropdownIconColor={Colors.primary}
             >
-              {menus.map(
-                (item: Menu) =>
+              {mealList.map(
+                (item: Curry) =>
                   item._id &&
-                  item.meal &&
-                  item.vegetable && (
+                  item.name && (
                     <Picker.Item
                       key={`${item._id}`}
-                      label={`🍛 ${item?.meal?.name} + 🥬 ${item?.vegetable?.name}`}
+                      label={`🍛 ${item?.name}`}
                       value={item._id}
                     />
                   )
@@ -70,6 +116,29 @@ export default function ChooseMealBox({
             </Picker>
           </View>
 
+          <Text>Choose Vegetable</Text>
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={selectedVegeId}
+              onValueChange={(itemValue: string) =>
+                setSelectedVegeId(itemValue)
+              }
+              style={styles.picker}
+              dropdownIconColor={Colors.primary}
+            >
+              {vegeList.map(
+                (item: Curry) =>
+                  item._id &&
+                  item.name && (
+                    <Picker.Item
+                      key={`${item._id}`}
+                      label={`🥬 ${item?.name}`}
+                      value={item._id}
+                    />
+                  )
+              )}
+            </Picker>
+          </View>
           <View
             style={{
               flexDirection: "row",

@@ -18,6 +18,7 @@ import DateTimePicker, {
 } from "@react-native-community/datetimepicker";
 
 interface Curry {
+  _id: string;
   type: string;
   name: string;
 }
@@ -28,7 +29,7 @@ interface Menu {
   vegetable: Curry;
 }
 
-interface MeanPlan {
+interface MealPlan {
   _id: string;
   date: string;
   menus: Menu[];
@@ -37,7 +38,7 @@ interface MeanPlan {
 export default function WeeklyMenuScreen() {
   const { getDayAndCurrentTime } = commonMixin();
   const [menus, setMenus] = useState<Menu[]>([]);
-  const [weeklyMenu, setWeeklyMenu] = useState<MeanPlan[]>([]);
+  const [weeklyMenu, setWeeklyMenu] = useState<MealPlan[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [regenerateDate, setRegenrateDate] = useState<string>("");
@@ -45,6 +46,7 @@ export default function WeeklyMenuScreen() {
   const [showToDate, setShowToDate] = useState(false);
   const [fromDate, setFromDate] = useState(getCurrentWeekRange().start);
   const [toDate, setToDate] = useState(getCurrentWeekRange().end);
+  const [selectedMenu, setSelectedMenu] = useState<MealPlan | null>(null);
 
   function getCurrentWeekRange() {
     const today = new Date();
@@ -141,9 +143,10 @@ export default function WeeklyMenuScreen() {
     }
   };
 
-  const handleUpdate = async (date: string) => {
-    setRegenrateDate(date);
+  const handleUpdate = async (data: MealPlan) => {
+    setRegenrateDate(data.date);
     setModalVisible(true);
+    setSelectedMenu(data);
   };
 
   const onChangeFromDate = (
@@ -170,51 +173,70 @@ export default function WeeklyMenuScreen() {
     <View style={styles.container}>
       <View style={styles.filterContainer}>
         <View style={styles.pickerWrapper}>
+          <Text style={styles.filterLabel}>From</Text>
           <TouchableOpacity
             style={[styles.input, { justifyContent: "center" }]}
             onPress={() => setShowFromDate(true)}
           >
             <Text style={{ color: "#1F2937" }}>
-              {fromDate || "Select Date"}
+              {fromDate ? fromDate.toString().slice(0, 10) : "Select Date"}
             </Text>
           </TouchableOpacity>
           {showFromDate && (
             <DateTimePicker
-              value={new Date(fromDate)}
+              value={fromDate ? new Date(fromDate) : new Date()}
               mode="date"
               display="default"
-              onChange={onChangeFromDate}
+              onChange={(event, date) => {
+                setShowFromDate(false);
+                if (date) onChangeFromDate(event, date);
+              }}
               maximumDate={new Date()}
             />
           )}
         </View>
 
         <View style={styles.pickerWrapper}>
+          <Text style={styles.filterLabel}>To</Text>
           <TouchableOpacity
             style={[styles.input, { justifyContent: "center" }]}
             onPress={() => setShowToDate(true)}
           >
-            <Text style={{ color: "#1F2937" }}>{toDate || "Select Date"}</Text>
+            <Text style={{ color: "#1F2937" }}>
+              {toDate ? toDate.toString().slice(0, 10) : "Select Date"}
+            </Text>
           </TouchableOpacity>
           {showToDate && (
             <DateTimePicker
-              value={new Date(toDate)}
+              value={toDate ? new Date(toDate) : new Date()}
               mode="date"
               display="default"
-              onChange={onChangeToDate}
+              onChange={(event, date) => {
+                setShowToDate(false);
+                if (date) onChangeToDate(event, date);
+              }}
               maximumDate={new Date()}
             />
           )}
         </View>
       </View>
 
-      <Button
-        title="🎲 Generate New Menu"
-        onPress={generateMenu}
-        color={Colors.primary}
-      />
-
-      <Text style={styles.title}>Your Weekly Menu</Text>
+      <View style={styles.filterContainer}>
+        <View style={{ flex: 1, marginHorizontal: 5 }}>
+          <Button
+            title="🎲 Generate"
+            onPress={generateMenu}
+            color={Colors.primary}
+          />
+        </View>
+        <View style={{ flex: 1, marginHorizontal: 5 }}>
+          <Button
+            title="Search"
+            onPress={fetchWeeklyMenuList}
+            color={Colors.primary}
+          />
+        </View>
+      </View>
 
       {loading ? (
         <ActivityIndicator size="large" color={Colors.primary} />
@@ -230,7 +252,7 @@ export default function WeeklyMenuScreen() {
                 </Text>
 
                 <TouchableOpacity
-                  onPress={() => handleUpdate(item.date)}
+                  onPress={() => handleUpdate(item)}
                   style={styles.editButton}
                 >
                   <Text style={styles.iconText}>✏️</Text>
@@ -252,13 +274,12 @@ export default function WeeklyMenuScreen() {
         modalVisible={modalVisible}
         setModalVisible={setModalVisible}
         isLoading={loading}
-        menus={menus}
         handleRegenerate={handleRegenerate}
+        selectedMenu={selectedMenu}
       />
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   input: {
     backgroundColor: "#F1F5F9",
