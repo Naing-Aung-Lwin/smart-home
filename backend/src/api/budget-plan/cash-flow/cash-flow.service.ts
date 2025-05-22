@@ -77,7 +77,7 @@ export class CashFlowService {
     }
 
     if (filter.budgetId) {
-      query.budgetId = filter.budgetId;
+      query.budgetId = new Types.ObjectId(filter.budgetId);
     }
 
     if (filter.minAmount !== undefined || filter.maxAmount !== undefined) {
