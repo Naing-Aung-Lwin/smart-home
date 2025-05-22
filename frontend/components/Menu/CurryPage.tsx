@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import api from "../../api/axios";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import {
+  Modal,
   View,
   Text,
   TextInput,
@@ -23,6 +24,7 @@ type Menu = {
 
 export default function MenuPage() {
   const [loading, setLoading] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
   const [confirmModal, setConfirmModal] = useState(false);
   const [searchName, setSearchName] = useState<string>("");
   const [searchType, setSearchType] = useState<string>("");
@@ -37,7 +39,6 @@ export default function MenuPage() {
     name: "",
     type: "",
   });
-  const [viewAll, setViewAll] = useState(false);
 
   const handleAddMenu = async () => {
     if (formData && !!formData.name.trim() && !!formData.type.trim()) {
@@ -77,9 +78,7 @@ export default function MenuPage() {
     </View>
   );
 
-  const menusToDisplay = viewAll
-    ? [...menus].reverse()
-    : [...menus].slice(-4).reverse();
+  const menusToDisplay = [...menus].reverse();
 
   const fetchMenu = async () => {
     try {
@@ -116,6 +115,11 @@ export default function MenuPage() {
 
   const typeOptions = ["meal", "vegetable"];
 
+  const searchTypeOptions = [
+    { key: "", value: "All" },
+    ...typeOptions.map((type) => ({ key: type, value: type })),
+  ];
+
   const handleDelete = async () => {
     try {
       await api.delete(`/curry/${selectedId}`);
@@ -137,12 +141,43 @@ export default function MenuPage() {
     fetchMenu();
   };
 
+  useEffect(() => {
+    fetchMenu();
+  }, [searchType]);
+
+  const handleAdd = () => {
+    setFormData({ name: "", type: "" });
+    setError({ name: "", type: "" });
+    setModalVisible(true);
+  };
+
   return (
     <>
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
+        <View style={styles.radioGroup}>
+          {searchTypeOptions.map((option) => {
+            const isSelected = searchType === option.key;
+
+            return (
+              <TouchableOpacity
+                key={option.key}
+                style={[styles.radioButton]}
+                onPress={() => setSearchType(option.key)}
+              >
+                <View style={styles.circleWrapper}>
+                  <View
+                    style={[styles.circle, isSelected && styles.circleSelected]}
+                  />
+                </View>
+                <Text style={[styles.radioLabel]}>{option.value}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+        <br />
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.searchInput}
@@ -155,70 +190,15 @@ export default function MenuPage() {
             <Ionicons name="search" size={22} color="#6B7280" />
           </TouchableOpacity>
         </View>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.searchInput}
-            value={searchType}
-            placeholder="Type"
-            onChangeText={setSearchType}
-            placeholderTextColor="#9CA3AF"
-          />
-          <TouchableOpacity onPress={onSearch} style={styles.iconWrapper}>
-            <Ionicons name="search" size={22} color="#6B7280" />
-          </TouchableOpacity>
-        </View>
-        {!viewAll && (
-          <>
-            <View style={styles.radioGroup}>
-              {typeOptions.map((option) => (
-                <TouchableOpacity
-                  key={option}
-                  style={styles.radioButton}
-                  onPress={() => setFormData({ ...formData, type: option })}
-                >
-                  <View style={styles.radioOuter}>
-                    {formData.type === option && (
-                      <View style={styles.radioInner} />
-                    )}
-                  </View>
-                  <Text style={styles.radioLabel}>{option}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            <Text style={styles.errorText}>{error.type}</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Curry Name"
-              value={formData.name}
-              onChangeText={(value) =>
-                setFormData({ ...formData, name: value })
-              }
-            />
-            <Text style={styles.errorText}>{error.name}</Text>
-
-            <TouchableOpacity
-              style={[styles.addButton, adding && styles.disabledButton]}
-              onPress={handleAddMenu}
-              disabled={adding}
-            >
-              <Text style={styles.addButtonText}>
-                {adding ? "Adding..." : "Add Curry"}
-              </Text>
-            </TouchableOpacity>
-          </>
-        )}
 
         <View style={styles.menuHeader}>
-          <Text style={styles.menusTitle}>All Currys</Text>
-          {!viewAll ? (
-            <TouchableOpacity onPress={() => setViewAll(true)}>
-              <Text style={styles.viewAllText}>View All</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity onPress={() => setViewAll(false)}>
-              <Text style={styles.viewAllText}>Back</Text>
-            </TouchableOpacity>
-          )}
+          <Text style={styles.menusTitle}>All Menus</Text>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.addNewButton]}
+            onPress={handleAdd}
+          >
+            <Text style={styles.buttonText}>Add New</Text>
+          </TouchableOpacity>
         </View>
 
         {loading ? (
@@ -238,6 +218,68 @@ export default function MenuPage() {
         isLoading={loading}
         handleSubmit={handleDelete}
       />
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <>
+              <View style={styles.radioGroup}>
+                {typeOptions.map((option) => (
+                  <TouchableOpacity
+                    key={option}
+                    style={styles.radioButton}
+                    onPress={() => setFormData({ ...formData, type: option })}
+                  >
+                    <View style={styles.radioOuter}>
+                      {formData.type === option && (
+                        <View style={styles.radioInner} />
+                      )}
+                    </View>
+                    <Text style={styles.radioLabel}>{option}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <Text style={styles.errorText}>{error.type}</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Curry Name"
+                value={formData.name}
+                onChangeText={(value) =>
+                  setFormData({ ...formData, name: value })
+                }
+              />
+              <Text style={styles.errorText}>{error.name}</Text>
+
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={[styles.halfButton, styles.cancelButton]}
+                  onPress={() => setModalVisible(false)}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.halfButton,
+                    styles.addButton,
+                    adding && styles.disabledButton,
+                  ]}
+                  onPress={handleAddMenu}
+                  disabled={adding}
+                >
+                  <Text style={styles.addButtonText}>
+                    {adding ? "Adding..." : "Add Curry"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          </View>
+        </View>
+      </Modal>
     </>
   );
 }
@@ -247,6 +289,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.white,
     padding: 20,
+  },
+  actionButton: {
+    paddingVertical: 4,
+    paddingHorizontal: 20,
+    borderRadius: 6,
+  },
+  addNewButton: {
+    backgroundColor: Colors.primary,
   },
   title: {
     fontSize: Fonts.size.subTitle,
@@ -288,10 +338,6 @@ const styles = StyleSheet.create({
   menusTitle: {
     fontSize: Fonts.size.title,
     fontWeight: "bold",
-    color: Colors.primary,
-  },
-  viewAllText: {
-    fontSize: Fonts.size.text,
     color: Colors.primary,
   },
   menuList: {
@@ -379,5 +425,66 @@ const styles = StyleSheet.create({
   },
   iconWrapper: {
     paddingLeft: 10,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: Fonts.size.button,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  modalContent: {
+    backgroundColor: Colors.white,
+    margin: 20,
+    padding: 20,
+    borderRadius: 10,
+  },
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 10, // If your React Native version doesn’t support gap, use marginRight on the first button
+    marginTop: 15,
+  },
+  halfButton: {
+    flex: 1,
+    paddingVertical: 7,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 10,
+  },
+  cancelButton: {
+    backgroundColor: "transparent",
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 7,
+    justifyContent: "center",
+    borderRadius: 5,
+    marginBottom: 30,
+    marginTop: 15,
+  },
+  cancelButtonText: {
+    fontSize: Fonts.size.button,
+    color: Colors.primary,
+  },
+  circleWrapper: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: "#6B7280",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  circle: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  circleSelected: {
+    backgroundColor: "#6B7280",
   },
 });

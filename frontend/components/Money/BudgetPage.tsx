@@ -152,7 +152,7 @@ const BudgetPage: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
+    padding: 15,
     backgroundColor: "#F7F8FA",
     flexGrow: 1,
   },

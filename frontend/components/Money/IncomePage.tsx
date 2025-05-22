@@ -72,6 +72,30 @@ const IncomePage: React.FC = () => {
     setLoading(false);
   };
 
+  const handleUpdateIncome = async () => {
+    if (!description || !amount) return;
+
+    if (budgets._id) {
+      setLoading(true);
+      const payload = {
+        category: description,
+        categoryType: "IncomeSource",
+        amount: Number(amount),
+        date: date.toISOString().split("T")[0],
+        budgetId: budgets._id || "",
+      };
+      const response = await api.put(`/cash-flows/${selectedId}`, payload);
+
+      if (response) {
+        setAmount("");
+        setDescription("");
+        fetchIncomes();
+      }
+      setModalVisible(false);
+      setLoading(false);
+    }
+  };
+
   const handleAddIncome = async () => {
     if (!description || !amount) return;
 
@@ -168,12 +192,22 @@ const IncomePage: React.FC = () => {
     }
   };
 
+  const updateFunc = (data: Income) => {
+    setAmount(data.amount.toString());
+    setDescription(data.categoryId.name);
+    setSelectedId(data._id);
+    setModalVisible(true);
+  };
+
   const deleteFunc = (id: string) => {
     setSelectedId(id);
     setConfirmModal(true);
   };
 
   const handleAdd = () => {
+    setSelectedId("");
+    setAmount("");
+    setDescription("");
     setModalVisible(true);
   };
 
@@ -250,6 +284,10 @@ const IncomePage: React.FC = () => {
                   </View>
                 </View>
                 <View>
+                  <TouchableOpacity onPress={() => updateFunc(item)}>
+                    <Text style={styles.deleteIcon}>✏️</Text>
+                  </TouchableOpacity>
+
                   <TouchableOpacity onPress={() => deleteFunc(item._id)}>
                     <Text style={styles.deleteIcon}>🗑️</Text>
                   </TouchableOpacity>
@@ -316,7 +354,7 @@ const IncomePage: React.FC = () => {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.halfButton, styles.addButton]}
-                  onPress={handleAddIncome}
+                  onPress={selectedId ? handleUpdateIncome : handleAddIncome}
                 >
                   <Text style={styles.addButtonText}>Add Income</Text>
                 </TouchableOpacity>
@@ -333,7 +371,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F7F8FA",
-    padding: 5,
+    padding: 15,
   },
   filterContainer: {
     flexDirection: "row",

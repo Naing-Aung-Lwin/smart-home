@@ -172,7 +172,34 @@ const ExpensePage: React.FC = () => {
   };
 
   const handleAdd = () => {
+    setSelectedId("");
+    setAmount("");
+    setReason("");
     setModalVisible(true);
+  };
+
+  const handleUpdateExpense = async () => {
+    if (!reason || !amount) return;
+
+    if (budgets._id) {
+      setLoading(true);
+      const payload = {
+        category: reason,
+        categoryType: "ExpenseCategory",
+        amount: Number(amount),
+        date: date.toISOString().split("T")[0],
+        budgetId: budgets._id || "",
+      };
+      const response = await api.put(`/cash-flows/${selectedId}`, payload);
+
+      if (response) {
+        setAmount("");
+        setReason("");
+        fetchExpenses();
+      }
+      setModalVisible(false);
+      setLoading(false);
+    }
   };
 
   const onChangeDate = (
@@ -183,6 +210,13 @@ const ExpensePage: React.FC = () => {
     if (selectedDate) {
       setDate(selectedDate);
     }
+  };
+
+  const updateFunc = (data: Expense) => {
+    setAmount(data.amount.toString());
+    setReason(data.categoryId.name);
+    setSelectedId(data._id);
+    setModalVisible(true);
   };
 
   return (
@@ -242,7 +276,7 @@ const ExpensePage: React.FC = () => {
               <View style={styles.expenseItem}>
                 <View>
                   <Text style={[styles.summaryText, { color: "red" }]}>
-                    Total: {totalExpense} MMK
+                    Total: {item.amount} MMK
                   </Text>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.expenseReason}>
@@ -251,6 +285,10 @@ const ExpensePage: React.FC = () => {
                     <Text style={styles.expenseDate}>{item.date}</Text>
                   </View>
                 </View>
+                <TouchableOpacity onPress={() => updateFunc(item)}>
+                  <Text style={styles.deleteIcon}>✏️</Text>
+                </TouchableOpacity>
+
                 <TouchableOpacity onPress={() => deleteFunc(item._id)}>
                   <Text style={styles.deleteIcon}>🗑️</Text>
                 </TouchableOpacity>
@@ -316,7 +354,7 @@ const ExpensePage: React.FC = () => {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.halfButton, styles.addButton]}
-                  onPress={handleAddExpense}
+                  onPress={selectedId ? handleUpdateExpense : handleAddExpense}
                 >
                   <Text style={styles.addButtonText}>Add expense</Text>
                 </TouchableOpacity>
@@ -333,7 +371,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F7F8FA",
-    padding: 5,
+    padding: 15,
   },
   filterContainer: {
     flexDirection: "row",
