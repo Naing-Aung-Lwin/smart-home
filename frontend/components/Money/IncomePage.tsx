@@ -145,7 +145,9 @@ const IncomePage: React.FC = () => {
     "November",
     "December",
   ];
-  const years = [2023, 2024, 2025];
+  const years = [
+    2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030,
+  ];
 
   useEffect(() => {
     fetchBudget();
