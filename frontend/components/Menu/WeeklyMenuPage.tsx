@@ -261,8 +261,8 @@ export default function WeeklyMenuScreen() {
               {item.menus.map((menu, index) => {
                 return (
                   <View key={index} style={styles.menuItem}>
-                    <Text>🍛 {menu.meal.name}</Text>
-                    <Text>🥬 {menu.vegetable.name}</Text>
+                    <Text>🍛 {menu?.meal?.name}</Text>
+                    <Text>🥬 {menu?.vegetable?.name}</Text>
                   </View>
                 );
               })}

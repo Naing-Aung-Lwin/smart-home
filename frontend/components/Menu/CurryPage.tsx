@@ -84,23 +84,14 @@ export default function MenuPage() {
     try {
       setLoading(true);
       let search = "";
-      if (searchName && searchType)
+      if (!!searchName && !!searchType)
         search = `type=${searchType}&name=${searchName}`;
 
-      if (searchType) search = `type=${searchType}`;
+      if (!!searchType) search = `type=${searchType}`;
 
-      if (searchName) search = `name=${searchName}`;
+      if (!!searchName) search = `name=${searchName}`;
 
-      if (searchName) {
-        const response = await api.get(`/curry?${search}`);
-        setMenus(response.data);
-      } else {
-        const response = await api.get("/curry");
-        setMenus(response.data);
-      }
-      const response = await api.get(
-        `/curry?type=${searchType}&name=${searchName}`
-      );
+      const response = await api.get(`/curry?${search}`);
       setMenus(response.data);
     } catch (error) {
       console.error("Error fetching menus:", error);
