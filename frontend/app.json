@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "frontend",
+    "name": "Smart Home",
     "slug": "frontend",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -20,10 +20,16 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.naingshar.frontend"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "69145fee-f9ed-4e4d-9649-9773374ea38f"
+      }
     }
   }
 }
