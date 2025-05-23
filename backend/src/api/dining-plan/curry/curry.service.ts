@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model } from 'mongoose';
+import { FilterQuery, Model, Types } from 'mongoose';
 import { Curry, CurryDocument } from 'src/schemas/dining-plan/curry.schema';
 import { CreateCurryDto } from 'src/dtos/dining-plan/curry/create-curry.dto';
 import { UpdateCurryDto } from 'src/dtos/dining-plan/curry/update-curry.dto';
@@ -54,7 +54,10 @@ export class CurryService {
 
   async delete(id: string): Promise<Curry> {
     const existingMenu = await this.menuModel.find({
-      $or: [{ meal: id }, { vegetable: id }],
+      $or: [
+        { meal: new Types.ObjectId(id) },
+        { vegetable: new Types.ObjectId(id) },
+      ],
     });
     if (existingMenu.length > 0) {
       throw new BadRequestException(
