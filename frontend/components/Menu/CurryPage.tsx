@@ -350,6 +350,7 @@ const styles = StyleSheet.create({
   },
   radioGroup: {
     flexDirection: "row",
+    marginBottom: 10,
   },
   radioButton: {
     flexDirection: "row",
@@ -468,6 +469,7 @@ const styles = StyleSheet.create({
     borderColor: "#6B7280",
     alignItems: "center",
     justifyContent: "center",
+    marginRight: 5,
   },
   circle: {
     width: 8,

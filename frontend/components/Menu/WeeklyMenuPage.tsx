@@ -191,7 +191,6 @@ export default function WeeklyMenuScreen() {
                 setShowFromDate(false);
                 if (date) onChangeFromDate(event, date);
               }}
-              maximumDate={new Date()}
             />
           )}
         </View>
@@ -215,7 +214,6 @@ export default function WeeklyMenuScreen() {
                 setShowToDate(false);
                 if (date) onChangeToDate(event, date);
               }}
-              maximumDate={new Date()}
             />
           )}
         </View>

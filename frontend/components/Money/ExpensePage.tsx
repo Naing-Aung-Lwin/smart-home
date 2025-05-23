@@ -21,6 +21,7 @@ import DateTimePicker, {
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import commonMixin from "../../composable/common";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 interface Category {
@@ -59,6 +60,7 @@ const ExpensePage: React.FC = () => {
   const [totalExpense, setTotalExpense] = useState<number>(0);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
   const today = new Date();
   const currentMonth = today.toLocaleString("default", { month: "long" }); // e.g., "May"
@@ -85,6 +87,7 @@ const ExpensePage: React.FC = () => {
     "November",
     "December",
   ];
+  const { formatDate } = commonMixin();
 
   const years = [
     new Date().getFullYear() - 2,
@@ -103,6 +106,9 @@ const ExpensePage: React.FC = () => {
       const response = await api.get(`/budget?month=${formattedDate}`);
       if (response.data && response.data.length > 0) {
         setBudgets(response.data[0]);
+      } else {
+        setExpenses([]);
+        setTotalExpense(0);
       }
     } catch (error) {
       console.error("Failed to fetch budget", error);
@@ -115,32 +121,35 @@ const ExpensePage: React.FC = () => {
   }, [budgets]);
 
   const fetchExpenses = async () => {
-    setLoading(true);
-    const response = await api.get(
-      `/cash-flows?categoryType=ExpenseCategory&budgetId=${budgets._id}`
-    );
-    setExpenses(response.data);
-    setTotalExpense(
-      response.data.reduce(
-        (total: number, income: Expense) => total + income.amount,
-        0
-      )
-    );
-    setLoading(false);
+    try {
+      setLoading(true);
+      const response = await api.get(
+        `/cash-flows?categoryType=ExpenseCategory&budgetId=${budgets._id}`
+      );
+      setExpenses(response.data);
+      setTotalExpense(
+        response.data.reduce(
+          (total: number, income: Expense) => total + income.amount,
+          0
+        )
+      );
+      setLoading(false);
+    } catch (error) {
+      console.error("Failed to fetch expenses", error);
+    }
   };
 
   const handleAddExpense = async () => {
     if (!reason || !amount) return;
 
-    if (budgets._id) {
-      setLoading(true);
-      const payload = {
-        category: reason,
-        categoryType: "ExpenseCategory",
-        amount: Number(amount),
-        date: dayjs.utc(date).tz("Asia/Yangon").format("YYYY-MM-DD HH:mm:ss"),
-        budgetId: budgets._id || "",
-      };
+    setLoading(true);
+    const payload = {
+      category: reason,
+      categoryType: "ExpenseCategory",
+      amount: Number(amount),
+      date: date.toISOString(),
+    };
+    try {
       const response = await api.post("/cash-flows", payload);
 
       if (response) {
@@ -148,9 +157,11 @@ const ExpensePage: React.FC = () => {
         setReason("");
         fetchExpenses();
       }
-      setModalVisible(false);
-      setLoading(false);
+    } catch (error) {
+      console.error("Error adding expense:", error);
     }
+    setModalVisible(false);
+    setLoading(false);
   };
 
   const handleDelete = async () => {
@@ -182,35 +193,62 @@ const ExpensePage: React.FC = () => {
   const handleUpdateExpense = async () => {
     if (!reason || !amount) return;
 
-    if (budgets._id) {
-      setLoading(true);
-      const payload = {
-        category: reason,
-        categoryType: "ExpenseCategory",
-        amount: Number(amount),
-        date: dayjs.utc(date).tz("Asia/Yangon").format("YYYY-MM-DD HH:mm:ss"),
-        budgetId: budgets._id || "",
-      };
+    setLoading(true);
+    const payload = {
+      category: reason,
+      categoryType: "ExpenseCategory",
+      amount: Number(amount),
+      date: date.toISOString(),
+    };
+    try {
       const response = await api.put(`/cash-flows/${selectedId}`, payload);
-
       if (response) {
         setAmount("");
         setReason("");
         fetchExpenses();
       }
-      setModalVisible(false);
-      setLoading(false);
+    } catch (error) {
+      console.error("Error updating expense:", error);
     }
+    setModalVisible(false);
+    setLoading(false);
   };
 
   const onChangeDate = (
-    _event: DateTimePickerEvent,
+    event: DateTimePickerEvent,
     selectedDate: Date | undefined
   ) => {
+    if (event.type === "dismissed") {
+      setShowDatePicker(false);
+      return;
+    }
     setShowDatePicker(Platform.OS === "ios");
     if (selectedDate) {
       setDate(selectedDate);
+      setShowDatePicker(false);
+      setShowTimePicker(true);
     }
+  };
+
+  const onTimeChange = (
+    event: DateTimePickerEvent,
+    selectedTime: Date | undefined
+  ) => {
+    if (event.type === "dismissed") {
+      setShowTimePicker(false);
+      return;
+    }
+    const currentTime = selectedTime || date;
+    const finalDate = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+      currentTime.getHours(),
+      currentTime.getMinutes(),
+      currentTime.getSeconds()
+    );
+    setDate(finalDate);
+    setShowTimePicker(false);
   };
 
   const updateFunc = (data: Expense) => {
@@ -275,24 +313,26 @@ const ExpensePage: React.FC = () => {
             contentContainerStyle={styles.listContainer}
             renderItem={({ item }) => (
               <View style={styles.expenseItem}>
-                <View>
+                <View style={styles.expenseInfo}>
                   <Text style={[styles.summaryText, { color: "red" }]}>
-                    Total: {item.amount} MMK
+                    -{item.amount} MMK
                   </Text>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.expenseReason}>
                       {item?.categoryId?.name}
                     </Text>
-                    <Text style={styles.expenseDate}>{item.date}</Text>
+                    <Text style={styles.expenseDate}>{formatDate(new Date(item.date))}</Text>
                   </View>
                 </View>
-                <TouchableOpacity onPress={() => updateFunc(item)}>
-                  <Text style={styles.deleteIcon}>✏️</Text>
-                </TouchableOpacity>
+                <View style={styles.expenseActions}>
+                  <TouchableOpacity onPress={() => updateFunc(item)}>
+                    <Text style={styles.deleteIcon}>✏️</Text>
+                  </TouchableOpacity>
 
-                <TouchableOpacity onPress={() => deleteFunc(item._id)}>
-                  <Text style={styles.deleteIcon}>🗑️</Text>
-                </TouchableOpacity>
+                  <TouchableOpacity onPress={() => deleteFunc(item._id)}>
+                    <Text style={styles.deleteIcon}>🗑️</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             )}
           />
@@ -339,10 +379,18 @@ const ExpensePage: React.FC = () => {
               {showDatePicker && (
                 <DateTimePicker
                   value={date}
-                  mode="datetime"
+                  mode="date"
                   display="default"
                   onChange={onChangeDate}
                   maximumDate={new Date()}
+                />
+              )}
+              {showTimePicker && (
+                <DateTimePicker
+                  value={date}
+                  mode="time"
+                  display="default"
+                  onChange={onTimeChange}
                 />
               )}
 
@@ -416,7 +464,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   summaryText: {
-    fontSize: Fonts.size.text,
+    fontSize: Fonts.size.subTitle,
     fontWeight: "bold",
     color: Colors.primary,
   },
@@ -431,6 +479,14 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderRadius: 12,
     elevation: 2,
+  },
+  expenseInfo: {
+    width: "70%",
+  },
+  expenseActions: {
+    width: "20%",
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   expenseDescription: {
     fontSize: Fonts.size.subTitle,

@@ -60,34 +60,37 @@ const IncomePage: React.FC = () => {
   const [incomes, setIncomes] = useState<Income[]>([]);
   const [totalIncome, setTotalIncome] = useState<number>(0);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
   const fetchIncomes = async () => {
     setLoading(true);
-    const response = await api.get(
-      `/cash-flows?categoryType=IncomeSource&budgetId=${budgets._id}`
-    );
-    setIncomes(response.data);
-    setTotalIncome(
-      response.data.reduce(
-        (total: number, income: Income) => total + income.amount,
-        0
-      )
-    );
+    try {
+      const response = await api.get(
+        `/cash-flows?categoryType=IncomeSource&budgetId=${budgets._id}`
+      );
+      setIncomes(response.data);
+      setTotalIncome(
+        response.data.reduce(
+          (total: number, income: Income) => total + income.amount,
+          0
+        )
+      );
+    } catch (error) {
+      console.error("Failed to fetch incomes", error);
+    }
     setLoading(false);
   };
 
   const handleUpdateIncome = async () => {
     if (!description || !amount) return;
-
-    if (budgets._id) {
-      setLoading(true);
-      const payload = {
-        category: description,
-        categoryType: "IncomeSource",
-        amount: Number(amount),
-        date: dayjs.utc(date).tz("Asia/Yangon").format("YYYY-MM-DD HH:mm:ss"),
-        budgetId: budgets._id || "",
-      };
+    setLoading(true);
+    const payload = {
+      category: description,
+      categoryType: "IncomeSource",
+      amount: Number(amount),
+      date: date.toISOString(),
+    };
+    try {
       const response = await api.put(`/cash-flows/${selectedId}`, payload);
 
       if (response) {
@@ -96,22 +99,23 @@ const IncomePage: React.FC = () => {
         fetchIncomes();
       }
       setModalVisible(false);
-      setLoading(false);
+    } catch (error) {
+      console.error("Error updating income:", error);
     }
+    setLoading(false);
   };
 
   const handleAddIncome = async () => {
     if (!description || !amount) return;
 
-    if (budgets._id) {
-      setLoading(true);
-      const payload = {
-        category: description,
-        categoryType: "IncomeSource",
-        amount: Number(amount),
-        date: dayjs.utc(date).tz("Asia/Yangon").format("YYYY-MM-DD HH:mm:ss"),
-        budgetId: budgets._id || "",
-      };
+    setLoading(true);
+    const payload = {
+      category: description,
+      categoryType: "IncomeSource",
+      amount: Number(amount),
+      date: date.toISOString(),
+    };
+    try {
       const response = await api.post("/cash-flows", payload);
 
       if (response) {
@@ -120,6 +124,9 @@ const IncomePage: React.FC = () => {
         fetchIncomes();
       }
       setModalVisible(false);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error adding income:", error);
       setLoading(false);
     }
   };
@@ -169,8 +176,12 @@ const IncomePage: React.FC = () => {
     try {
       const formattedDate = `${selectedYear}-${getMonthNumber(selectedMonth)}`;
       const response = await api.get(`/budget?month=${formattedDate}`);
+      console.log("Budget response:", response.data);
       if (response.data && response.data.length > 0) {
         setBudgets(response.data[0]);
+      } else {
+        setIncomes([]);
+        setTotalIncome(0);
       }
     } catch (error) {
       console.error("Failed to fetch budget", error);
@@ -211,14 +222,54 @@ const IncomePage: React.FC = () => {
     setModalVisible(true);
   };
 
+  function formatDate(date: Date) {
+    const pad = (n: number) => n.toString().padStart(2, "0");
+
+    const year = date.getFullYear();
+    const month = pad(date.getMonth() + 1);
+    const day = pad(date.getDate());
+    const hours = pad(date.getHours());
+    const minutes = pad(date.getMinutes());
+    const seconds = pad(date.getSeconds());
+
+    return `${year}:${month}:${day} ${hours}:${minutes}:${seconds}`;
+  }
+
   const onChangeDate = (
-    _event: DateTimePickerEvent,
+    event: DateTimePickerEvent,
     selectedDate: Date | undefined
   ) => {
+    if (event.type === "dismissed") {
+      setShowDatePicker(false);
+      return;
+    }
     setShowDatePicker(Platform.OS === "ios");
     if (selectedDate) {
       setDate(selectedDate);
+      setShowDatePicker(false);
+      setShowTimePicker(true);
     }
+  };
+
+  const onTimeChange = (
+    event: DateTimePickerEvent,
+    selectedTime: Date | undefined
+  ) => {
+    if (event.type === "dismissed") {
+      setShowTimePicker(false);
+      return;
+    }
+    const currentTime = selectedTime || date;
+    const finalDate = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+      currentTime.getHours(),
+      currentTime.getMinutes(),
+      currentTime.getSeconds()
+    );
+    setDate(finalDate);
+    setShowTimePicker(false);
   };
 
   return (
@@ -274,16 +325,18 @@ const IncomePage: React.FC = () => {
             contentContainerStyle={styles.listContainer}
             renderItem={({ item }) => (
               <View style={styles.incomeItem}>
-                <View>
-                  <Text style={styles.incomeAmount}>+ {item.amount} MMK</Text>
+                <View style={styles.incomeInfo}>
+                  <Text style={styles.incomeAmount}>+{item.amount} MMK</Text>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.incomeDescription}>
                       {item?.categoryId?.name}
                     </Text>
-                    <Text style={styles.incomeDate}>{item.date}</Text>
+                    <Text style={styles.incomeDate}>
+                      {formatDate(new Date(item.date))}
+                    </Text>
                   </View>
                 </View>
-                <View>
+                <View style={styles.incomeActions}>
                   <TouchableOpacity onPress={() => updateFunc(item)}>
                     <Text style={styles.deleteIcon}>✏️</Text>
                   </TouchableOpacity>
@@ -338,10 +391,19 @@ const IncomePage: React.FC = () => {
               {showDatePicker && (
                 <DateTimePicker
                   value={date}
-                  mode="datetime"
+                  mode="date"
                   display="default"
                   onChange={onChangeDate}
                   maximumDate={new Date()}
+                />
+              )}
+
+              {showTimePicker && (
+                <DateTimePicker
+                  value={date}
+                  mode="time"
+                  display="default"
+                  onChange={onTimeChange}
                 />
               )}
 
@@ -410,7 +472,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   summaryText: {
-    fontSize: Fonts.size.text,
+    fontSize: Fonts.size.subTitle,
     fontWeight: "bold",
     color: Colors.primary,
   },
@@ -426,6 +488,14 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     elevation: 2,
   },
+  incomeInfo: {
+    width: "70%",
+  },
+  incomeActions: {
+    width: "20%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
   incomeDescription: {
     fontSize: Fonts.size.subTitle,
     fontWeight: "500",
@@ -439,7 +509,6 @@ const styles = StyleSheet.create({
     fontSize: Fonts.size.subTitle,
     fontWeight: "600",
     color: Colors.primary,
-    alignSelf: "center",
   },
   deleteIcon: {
     fontSize: 18,

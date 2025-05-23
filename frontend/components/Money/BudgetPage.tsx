@@ -9,6 +9,7 @@ import {
 import { Colors, Fonts } from "../../constants/theme";
 import api from "../../api/axios";
 import { Picker } from "@react-native-picker/picker";
+import { useFocusEffect } from "@react-navigation/native";
 
 interface Budget {
   _id: string;
@@ -62,6 +63,12 @@ const BudgetPage: React.FC = () => {
   useEffect(() => {
     fetchBudget();
   }, [selectedMonth, selectedYear]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchBudget();
+    }, [])
+  );
 
   const fetchBudget = async () => {
     setLoading(true);
