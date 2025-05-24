@@ -12,6 +12,7 @@ import { IncomeSourceModule } from 'src/api/budget-plan/income-source/income-sou
 import { BudgetModule } from './api/budget-plan/budget/budget.module';
 import { ExpenseCategoryModule } from './api/budget-plan/expense-category/expense-category.module';
 import { CashFlowModule } from './api/budget-plan/cash-flow/cash-flow.module';
+import { SavingModule } from './api/budget-plan/saving/saving.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { CashFlowModule } from './api/budget-plan/cash-flow/cash-flow.module';
     CashFlowModule,
     IncomeSourceModule,
     ExpenseCategoryModule,
+    SavingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

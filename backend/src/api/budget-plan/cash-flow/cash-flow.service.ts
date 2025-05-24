@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 import { CashFlow } from 'src/schemas/budget-plan/cash-flow.schema';
 import {
   CreateCashFlowDto,
@@ -9,10 +9,16 @@ import {
 } from 'src/dtos/budget-plan/cash-flow.dto';
 import { IncomeSourceService } from 'src/api/budget-plan/income-source/income-source.service';
 import { BudgetService } from '../budget/budget.service';
-import { IncomeSource } from 'src/schemas/budget-plan/income-source.schema';
 import { ExpenseCategoryService } from 'src/api/budget-plan/expense-category/expense-category.service';
-import { ExpenseCategory } from 'src/schemas/budget-plan/expense-category.schema';
-import { CreateBudgetDto } from 'src/dtos/budget-plan/budget.dto';
+import { handleCategory } from './helpers/category.helper';
+import {
+  calculateBudgetAfterDelete,
+  calculateUpdatedBudget,
+  handleBudget,
+  updateBudget,
+} from './helpers/budget.helper';
+import { buildCashFlowQuery } from './helpers/query.helper';
+import { populateCashFlows } from './helpers/populate.helper';
 
 @Injectable()
 export class CashFlowService {
@@ -24,39 +30,35 @@ export class CashFlowService {
   ) {}
 
   async create(dto: CreateCashFlowDto): Promise<CashFlow> {
-    let category: IncomeSource | ExpenseCategory | null = null;
-    if (dto.categoryType === 'IncomeSource') {
-      category = await this.incomeSourceSvc.create({ name: dto.category });
-    } else if (dto.categoryType === 'ExpenseCategory') {
-      category = await this.expenseCategorySvc.create({ name: dto.category });
-    } else {
-      throw new NotFoundException('Category not found');
-    }
-    const month = dto.date.split('-')[1];
-    const year = dto.date.split('-')[0];
-    if (!month || !year) {
-      throw new NotFoundException('Month or year not found');
-    }
-    const budgetMonth: CreateBudgetDto = {
-      month: `${year}-${month}`,
-    };
-    const budget = await this.budgetSvc.create(budgetMonth);
-    if (!budget) throw new NotFoundException('Budget not found');
+    const category = await handleCategory(
+      dto.categoryType,
+      dto.category,
+      this.incomeSourceSvc,
+      this.expenseCategorySvc,
+    );
+
+    const budget = await handleBudget(dto.date, this.budgetSvc);
+
     if (dto.categoryType === 'IncomeSource') {
       const totalIncome = budget.totalIncome + dto.amount;
-      await this.budgetSvc.update(budget._id as string, {
+      await updateBudget(
+        budget._id as string,
+        this.budgetSvc,
         totalIncome,
-        month: budget.month,
-        totalExpense: budget.totalExpense,
-      });
+        budget.totalExpense,
+        budget.month,
+      );
     } else {
       const totalExpense = budget.totalExpense + dto.amount;
-      await this.budgetSvc.update(budget._id as string, {
+      await updateBudget(
+        budget._id as string,
+        this.budgetSvc,
+        budget.totalIncome,
         totalExpense,
-        month: budget.month,
-        totalIncome: budget.totalIncome,
-      });
+        budget.month,
+      );
     }
+
     const created = new this.cashFlowModel({
       ...dto,
       budgetId: budget._id,
@@ -66,53 +68,16 @@ export class CashFlowService {
   }
 
   async findAll(filter: FilterCashFlowDto): Promise<CashFlow[]> {
-    const query: FilterQuery<CashFlow> = {};
+    const query = buildCashFlowQuery(filter);
 
-    if (filter.categoryId) {
-      query.categoryId = new Types.ObjectId(filter.categoryId);
-    }
-
-    if (filter.categoryType) {
-      query.categoryType = filter.categoryType;
-    }
-
-    if (filter.budgetId) {
-      query.budgetId = new Types.ObjectId(filter.budgetId);
-    }
-
-    if (filter.minAmount !== undefined || filter.maxAmount !== undefined) {
-      const amount: { $gte?: number; $lte?: number } = {};
-      if (filter.minAmount !== undefined) {
-        amount.$gte = filter.minAmount;
-      }
-      if (filter.maxAmount !== undefined) {
-        amount.$lte = filter.maxAmount;
-      }
-      query.amount = amount;
-    }
-
-    if (filter.startDate || filter.endDate) {
-      const date: { $gte?: string; $lte?: string } = {};
-      if (filter.startDate) {
-        date.$gte = filter.startDate;
-      }
-      if (filter.endDate) {
-        date.$lte = filter.endDate;
-      }
-      query.date = date;
-    }
     const cashFlows = await this.cashFlowModel
       .find(query)
       .sort({ date: -1 })
       .lean();
 
-    const populatedCashFlows = await Promise.all(
-      cashFlows.map(async (tx) => {
-        return this.cashFlowModel.populate(tx, {
-          path: 'categoryId',
-          model: tx.categoryType,
-        });
-      }),
+    const populatedCashFlows = await populateCashFlows(
+      cashFlows,
+      this.cashFlowModel,
     );
 
     return populatedCashFlows;
@@ -131,35 +96,32 @@ export class CashFlowService {
   async update(id: string, dto: UpdateCashFlowDto): Promise<CashFlow> {
     const current = await this.findById(id);
 
-    let category: IncomeSource | ExpenseCategory | null = null;
     const categoryType = dto.categoryType
       ? dto.categoryType
       : current.categoryType;
-    if (categoryType === 'IncomeSource' && dto.category) {
-      category = await this.incomeSourceSvc.create({ name: dto.category });
-    } else if (categoryType === 'ExpenseCategory' && dto.category) {
-      category = await this.expenseCategorySvc.create({ name: dto.category });
-    }
+    const category = await handleCategory(
+      categoryType,
+      dto.category,
+      this.incomeSourceSvc,
+      this.expenseCategorySvc,
+    );
+
     const updateDto = category ? { ...dto, categoryId: category._id } : dto;
 
     const budgetId = dto.budgetId ? dto.budgetId : String(current.budgetId);
     const budget = await this.budgetSvc.findById(budgetId);
-    if (!budget) throw new NotFoundException('Budget not found');
-    let totalIncome = budget.totalIncome;
-    let totalExpense = budget.totalExpense;
 
-    if (dto.amount) {
-      if (dto.categoryType === 'ExpenseCategory') {
-        totalExpense = budget.totalExpense - current.amount + dto.amount;
-      } else {
-        totalIncome = budget.totalIncome - current.amount + dto.amount;
-      }
-    }
+    const { totalIncome, totalExpense } = calculateUpdatedBudget(
+      budget,
+      current.amount,
+      dto.amount,
+      categoryType,
+    );
 
     await this.budgetSvc.update(budget._id as string, {
       totalIncome,
-      month: budget.month,
       totalExpense,
+      month: budget.month,
     });
 
     const updated = await this.cashFlowModel
@@ -173,13 +135,10 @@ export class CashFlowService {
     const current = await this.findById(id);
     const budget = await this.budgetSvc.findById(String(current.budgetId));
 
-    let totalIncome = budget.totalIncome;
-    let totalExpense = budget.totalExpense;
-    if (current.categoryType === 'ExpenseCategory') {
-      totalExpense = budget.totalExpense - current.amount;
-    } else {
-      totalIncome = budget.totalIncome - current.amount;
-    }
+    const { totalIncome, totalExpense } = calculateBudgetAfterDelete(
+      budget,
+      current,
+    );
 
     await this.budgetSvc.update(budget._id as string, {
       totalIncome,
