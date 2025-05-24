@@ -18,12 +18,7 @@ import ConfirmModalBox from "../common/ConfirmModalBox";
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
-import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
-import timezone from "dayjs/plugin/timezone";
 import commonMixin from "../../composable/common";
-dayjs.extend(utc);
-dayjs.extend(timezone);
 interface Category {
   _id: string;
   name: string;
@@ -43,6 +38,27 @@ interface Budget {
   totalIncome: number;
   totalExpense: number;
 }
+const months = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+const years = [
+  new Date().getFullYear() - 2,
+  new Date().getFullYear() - 1,
+  new Date().getFullYear(),
+];
+
 const ExpensePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -63,7 +79,7 @@ const ExpensePage: React.FC = () => {
   const [showTimePicker, setShowTimePicker] = useState(false);
 
   const today = new Date();
-  const currentMonth = today.toLocaleString("default", { month: "long" }); // e.g., "May"
+  const currentMonth = today.toLocaleString("default", { month: "long" });
   const currentYear = today.getFullYear();
   const [selectedMonth, setSelectedMonth] = useState<string>(currentMonth);
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
@@ -73,27 +89,8 @@ const ExpensePage: React.FC = () => {
     );
     return monthIndex + 1 < 10 ? `0${monthIndex + 1}` : `${monthIndex + 1}`;
   };
-  const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-  const { formatDate } = commonMixin();
 
-  const years = [
-    new Date().getFullYear() - 2,
-    new Date().getFullYear() - 1,
-    new Date().getFullYear(),
-  ];
+  const { formatDate } = commonMixin();
 
   useEffect(() => {
     fetchBudget();
@@ -321,7 +318,9 @@ const ExpensePage: React.FC = () => {
                     <Text style={styles.expenseReason}>
                       {item?.categoryId?.name}
                     </Text>
-                    <Text style={styles.expenseDate}>{formatDate(new Date(item.date))}</Text>
+                    <Text style={styles.expenseDate}>
+                      {formatDate(new Date(item.date))}
+                    </Text>
                   </View>
                 </View>
                 <View style={styles.expenseActions}>
@@ -359,13 +358,16 @@ const ExpensePage: React.FC = () => {
                 onChangeText={setAmount}
                 placeholder="Amount"
                 keyboardType="numeric"
+                inputMode="numeric"
                 style={styles.input}
+                placeholderTextColor={Colors.black}
               />
               <TextInput
                 value={reason}
                 onChangeText={setReason}
                 placeholder="Reason"
                 style={styles.input}
+                placeholderTextColor={Colors.black}
               />
 
               <TouchableOpacity
@@ -405,7 +407,7 @@ const ExpensePage: React.FC = () => {
                   style={[styles.halfButton, styles.addButton]}
                   onPress={selectedId ? handleUpdateExpense : handleAddExpense}
                 >
-                  <Text style={styles.addButtonText}>Add expense</Text>
+                  <Text style={styles.addButtonText}>Save</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -444,6 +446,7 @@ const styles = StyleSheet.create({
   picker: {
     height: 55,
     backgroundColor: Colors.white,
+    color: Colors.black,
     borderRadius: 5,
   },
   card: {

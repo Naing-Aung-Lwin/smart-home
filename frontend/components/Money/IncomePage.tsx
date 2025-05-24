@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from "react";
 import api from "../../api/axios";
 import { Picker } from "@react-native-picker/picker";
-import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
-import timezone from "dayjs/plugin/timezone";
 import {
   View,
   Text,
@@ -41,8 +38,28 @@ interface Budget {
   totalIncome: number;
   totalExpense: number;
 }
-dayjs.extend(utc);
-dayjs.extend(timezone);
+
+const months = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+const years = [
+  new Date().getFullYear() - 2,
+  new Date().getFullYear() - 1,
+  new Date().getFullYear(),
+];
+
 const IncomePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -142,26 +159,6 @@ const IncomePage: React.FC = () => {
     );
     return monthIndex + 1 < 10 ? `0${monthIndex + 1}` : `${monthIndex + 1}`;
   };
-  const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-
-  const years = [
-    new Date().getFullYear() - 2,
-    new Date().getFullYear() - 1,
-    new Date().getFullYear(),
-  ];
 
   useEffect(() => {
     fetchBudget();
@@ -176,7 +173,6 @@ const IncomePage: React.FC = () => {
     try {
       const formattedDate = `${selectedYear}-${getMonthNumber(selectedMonth)}`;
       const response = await api.get(`/budget?month=${formattedDate}`);
-      console.log("Budget response:", response.data);
       if (response.data && response.data.length > 0) {
         setBudgets(response.data[0]);
       } else {
@@ -370,14 +366,17 @@ const IncomePage: React.FC = () => {
                 value={amount}
                 onChangeText={setAmount}
                 placeholder="Amount"
-                keyboardType="numeric"
                 style={styles.input}
+                placeholderTextColor={Colors.black}
+                keyboardType="numeric"
+                inputMode="numeric"
               />
               <TextInput
                 value={description}
                 onChangeText={setDescription}
                 placeholder="Description"
                 style={styles.input}
+                placeholderTextColor={Colors.black}
               />
 
               <TouchableOpacity
@@ -418,7 +417,7 @@ const IncomePage: React.FC = () => {
                   style={[styles.halfButton, styles.addButton]}
                   onPress={selectedId ? handleUpdateIncome : handleAddIncome}
                 >
-                  <Text style={styles.addButtonText}>Add Income</Text>
+                  <Text style={styles.addButtonText}>Save</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -446,12 +445,12 @@ const styles = StyleSheet.create({
   },
   filterLabel: {
     fontSize: Fonts.size.text,
-    color: "#6B7280",
     marginBottom: 4,
   },
   picker: {
     height: 55,
     backgroundColor: Colors.white,
+    color: Colors.black,
     borderRadius: 5,
   },
   card: {
@@ -461,6 +460,7 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: "#F1F5F9",
+    color: Colors.black,
     padding: 8,
     marginBottom: 10,
     fontSize: Fonts.size.text,

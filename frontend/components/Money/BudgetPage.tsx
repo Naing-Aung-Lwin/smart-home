@@ -191,6 +191,7 @@ const styles = StyleSheet.create({
   picker: {
     height: 55,
     backgroundColor: Colors.white,
+    color: Colors.black,
     borderRadius: 5,
   },
   card: {
