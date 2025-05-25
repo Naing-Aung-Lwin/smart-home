@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsDateString,
+  IsMongoId,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -22,6 +23,23 @@ export class CreateSavingDto {
     description: 'Date of the saving',
   })
   date: string;
+
+  @IsOptional()
+  @IsMongoId()
+  @ApiProperty({
+    example: 'Saving from salary',
+    description: 'Description of the saving (optional)',
+    required: false,
+  })
+  description?: string;
+
+  @IsOptional()
+  @IsMongoId()
+  @ApiProperty({
+    example: 'Income ID (MongoDB ObjectId)',
+    description: 'Income associated with the saving',
+  })
+  incomeId?: string;
 }
 
 export class UpdateSavingDto {
@@ -42,4 +60,21 @@ export class UpdateSavingDto {
     required: false,
   })
   date: string;
+
+  @IsOptional()
+  @IsMongoId()
+  @ApiProperty({
+    example: 'Saving from salary',
+    description: 'Description of the saving (optional)',
+    required: false,
+  })
+  description?: string;
+
+  @IsOptional()
+  @IsMongoId()
+  @ApiProperty({
+    example: 'Income ID (MongoDB ObjectId)',
+    description: 'Income associated with the saving',
+  })
+  incomeId: string;
 }

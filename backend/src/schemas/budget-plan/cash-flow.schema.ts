@@ -21,6 +21,9 @@ export class CashFlow extends Document {
 
   @Prop({ type: Types.ObjectId, ref: 'Budget', required: true })
   budgetId: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, ref: 'Saving', required: false })
+  savingId: Types.ObjectId;
 }
 
 export const CashFlowSchema = SchemaFactory.createForClass(CashFlow);

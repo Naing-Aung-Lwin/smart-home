@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { CashFlow } from 'src/schemas/budget-plan/cash-flow.schema';
 import {
   CreateCashFlowDto,
@@ -19,6 +19,8 @@ import {
 } from './helpers/budget.helper';
 import { buildCashFlowQuery } from './helpers/query.helper';
 import { populateCashFlows } from './helpers/populate.helper';
+import { SavingService } from '../saving/saving.service';
+import { handleSaving } from './helpers/saving.helper';
 
 @Injectable()
 export class CashFlowService {
@@ -27,20 +29,31 @@ export class CashFlowService {
     private incomeSourceSvc: IncomeSourceService,
     private expenseCategorySvc: ExpenseCategoryService,
     private budgetSvc: BudgetService,
+    private savingSvc: SavingService,
   ) {}
 
   async create(dto: CreateCashFlowDto): Promise<CashFlow> {
-    const category = await handleCategory(
-      dto.categoryType,
-      dto.category,
-      this.incomeSourceSvc,
-      this.expenseCategorySvc,
+    const created = new this.cashFlowModel({
+      ...dto,
+    });
+    let incomeAmount = dto.amount;
+
+    // Handle saving logic if applicable
+    const saving = await handleSaving(
+      dto,
+      this.savingSvc,
+      created._id as string,
     );
+    if (saving) {
+      created.savingId = saving._id as Types.ObjectId;
+      incomeAmount = dto.amount - saving.amount;
+      created.amount = incomeAmount;
+    }
 
+    // Handle budget update based on the cash flow type
     const budget = await handleBudget(dto.date, this.budgetSvc);
-
     if (dto.categoryType === 'IncomeSource') {
-      const totalIncome = budget.totalIncome + dto.amount;
+      const totalIncome = budget.totalIncome + incomeAmount;
       await updateBudget(
         budget._id as string,
         this.budgetSvc,
@@ -49,7 +62,7 @@ export class CashFlowService {
         budget.month,
       );
     } else {
-      const totalExpense = budget.totalExpense + dto.amount;
+      const totalExpense = budget.totalExpense + incomeAmount;
       await updateBudget(
         budget._id as string,
         this.budgetSvc,
@@ -58,12 +71,19 @@ export class CashFlowService {
         budget.month,
       );
     }
+    created.budgetId = budget._id as Types.ObjectId;
 
-    const created = new this.cashFlowModel({
-      ...dto,
-      budgetId: budget._id,
-      categoryId: category._id,
-    });
+    // Handle category
+    const category = await handleCategory(
+      dto.categoryType,
+      dto.category,
+      this.incomeSourceSvc,
+      this.expenseCategorySvc,
+    );
+    if (category) {
+      created.categoryId = category._id as Types.ObjectId;
+    }
+
     return created.save();
   }
 
@@ -145,6 +165,10 @@ export class CashFlowService {
       month: budget.month,
       totalExpense,
     });
+
+    if (current.savingId) {
+      await this.savingSvc.delete(String(current.savingId));
+    }
 
     const deleted = await this.cashFlowModel.findByIdAndDelete(id).exec();
     if (!deleted) throw new NotFoundException('Income not found');
