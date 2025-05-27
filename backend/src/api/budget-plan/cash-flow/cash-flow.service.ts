@@ -20,7 +20,8 @@ import {
 import { buildCashFlowQuery } from './helpers/query.helper';
 import { populateCashFlows } from './helpers/populate.helper';
 import { SavingService } from '../saving/saving.service';
-import { handleSaving } from './helpers/saving.helper';
+import { handleSaving, handleUpdateSaving } from './helpers/saving.helper';
+import { Saving } from 'src/schemas/budget-plan/saving.schema';
 
 @Injectable()
 export class CashFlowService {
@@ -46,8 +47,8 @@ export class CashFlowService {
     );
     if (saving) {
       created.savingId = saving._id as Types.ObjectId;
+      created.amount = dto.amount;
       incomeAmount = dto.amount - saving.amount;
-      created.amount = incomeAmount;
     }
 
     // Handle budget update based on the cash flow type
@@ -116,36 +117,53 @@ export class CashFlowService {
   async update(id: string, dto: UpdateCashFlowDto): Promise<CashFlow> {
     const current = await this.findById(id);
 
+    // Update Category
     const categoryType = dto.categoryType
       ? dto.categoryType
       : current.categoryType;
-    const category = await handleCategory(
-      categoryType,
-      dto.category,
-      this.incomeSourceSvc,
-      this.expenseCategorySvc,
+    if (dto.category) {
+      const category = await handleCategory(
+        categoryType,
+        dto.category,
+        this.incomeSourceSvc,
+        this.expenseCategorySvc,
+      );
+      dto.category = category._id as string;
+    }
+
+    // Update Saving
+    const savingId = dto.savingId || (current.savingId as unknown as string);
+    let saving: Saving | null = null;
+    if (savingId) {
+      saving = await this.savingSvc.findById(savingId);
+    }
+    const updatedAmount = await handleUpdateSaving(
+      dto,
+      current,
+      this.savingSvc,
+      id,
+      saving,
     );
 
-    const updateDto = category ? { ...dto, categoryId: category._id } : dto;
-
+    // Update budget
     const budgetId = dto.budgetId ? dto.budgetId : String(current.budgetId);
     const budget = await this.budgetSvc.findById(budgetId);
-
+    const currentIncomeAmount = current.amount - (saving?.amount || 0);
     const { totalIncome, totalExpense } = calculateUpdatedBudget(
       budget,
-      current.amount,
-      dto.amount,
+      currentIncomeAmount,
+      updatedAmount,
       categoryType,
     );
-
     await this.budgetSvc.update(budget._id as string, {
       totalIncome,
       totalExpense,
       month: budget.month,
     });
 
+    // Update cash flow
     const updated = await this.cashFlowModel
-      .findByIdAndUpdate(id, updateDto, { new: true })
+      .findByIdAndUpdate(id, dto, { new: true })
       .exec();
     if (!updated) throw new NotFoundException('Income not found');
     return updated;
@@ -154,6 +172,12 @@ export class CashFlowService {
   async delete(id: string): Promise<CashFlow> {
     const current = await this.findById(id);
     const budget = await this.budgetSvc.findById(String(current.budgetId));
+
+    if (current.savingId) {
+      const saving = await this.savingSvc.findById(String(current.savingId));
+      current.amount = current.amount - saving.amount;
+      await this.savingSvc.delete(String(current.savingId));
+    }
 
     const { totalIncome, totalExpense } = calculateBudgetAfterDelete(
       budget,
@@ -165,10 +189,6 @@ export class CashFlowService {
       month: budget.month,
       totalExpense,
     });
-
-    if (current.savingId) {
-      await this.savingSvc.delete(String(current.savingId));
-    }
 
     const deleted = await this.cashFlowModel.findByIdAndDelete(id).exec();
     if (!deleted) throw new NotFoundException('Income not found');

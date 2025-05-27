@@ -137,6 +137,48 @@ export class UpdateCashFlowDto {
     description: 'Budget associated with the income',
   })
   budgetId: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({
+    example: 'normal or saving',
+    description: 'Income type (normal or saving)',
+  })
+  @IsEnum(['normal', 'saving'])
+  incomeType?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({
+    example: 'normal or percentage',
+    description: 'Income type (normal or saving)',
+  })
+  @IsEnum(['normal', 'percentage'])
+  savingType?: string;
+
+  @IsNumber()
+  @IsOptional()
+  @ApiProperty({
+    example: 10,
+    description: 'Percentage of the income to be saved',
+  })
+  savingPercentage?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @ApiProperty({
+    example: 10,
+    description: 'Amount of the income to be saved',
+  })
+  savingAmount?: number;
+
+  @IsOptional()
+  @IsMongoId()
+  @ApiProperty({
+    example: 'Budget ID (MongoDB ObjectId)',
+    description: 'Budget associated with the income',
+  })
+  savingId?: string;
 }
 
 export class FilterCashFlowDto {
