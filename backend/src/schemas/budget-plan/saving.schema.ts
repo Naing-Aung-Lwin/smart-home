@@ -12,8 +12,8 @@ export class Saving extends Document {
   @Prop({ required: false })
   description: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'CashFlow', required: false })
-  incomeId: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'Budget', required: false })
+  budgetId: Types.ObjectId;
 }
 
 export const SavingSchema = SchemaFactory.createForClass(Saving);

@@ -5,6 +5,7 @@ import {
   IsNotEmpty,
   IsNumber,
   IsOptional,
+  IsString,
 } from 'class-validator';
 
 export class CreateSavingDto {
@@ -24,14 +25,14 @@ export class CreateSavingDto {
   })
   date: string;
 
-  @IsOptional()
+  @IsString()
   @IsMongoId()
   @ApiProperty({
     example: 'Saving from salary',
     description: 'Description of the saving (optional)',
     required: false,
   })
-  description?: string;
+  description: string;
 
   @IsOptional()
   @IsMongoId()
@@ -68,7 +69,7 @@ export class UpdateSavingDto {
     description: 'Description of the saving (optional)',
     required: false,
   })
-  description?: string;
+  description: string;
 
   @IsOptional()
   @IsMongoId()
