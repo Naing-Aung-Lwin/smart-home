@@ -26,7 +26,6 @@ export class CreateSavingDto {
   date: string;
 
   @IsString()
-  @IsMongoId()
   @ApiProperty({
     example: 'Saving from salary',
     description: 'Description of the saving (optional)',
@@ -37,10 +36,10 @@ export class CreateSavingDto {
   @IsOptional()
   @IsMongoId()
   @ApiProperty({
-    example: 'Income ID (MongoDB ObjectId)',
-    description: 'Income associated with the saving',
+    example: 'Budget ID (MongoDB ObjectId)',
+    description: 'Budget associated with the saving',
   })
-  incomeId?: string;
+  budgetId?: string;
 }
 
 export class UpdateSavingDto {
@@ -63,7 +62,6 @@ export class UpdateSavingDto {
   date: string;
 
   @IsOptional()
-  @IsMongoId()
   @ApiProperty({
     example: 'Saving from salary',
     description: 'Description of the saving (optional)',
@@ -74,8 +72,26 @@ export class UpdateSavingDto {
   @IsOptional()
   @IsMongoId()
   @ApiProperty({
-    example: 'Income ID (MongoDB ObjectId)',
-    description: 'Income associated with the saving',
+    example: 'Budget ID (MongoDB ObjectId)',
+    description: 'Budget associated with the saving',
   })
-  incomeId: string;
+  budgetId: string;
+}
+
+export class FilterSavingDto {
+  @IsDateString()
+  @IsOptional()
+  @ApiProperty({
+    description: 'Start date of the saving',
+    required: false,
+  })
+  fromDate: string;
+
+  @IsDateString()
+  @IsOptional()
+  @ApiProperty({
+    description: 'End date of the saving',
+    required: false,
+  })
+  toDate: string;
 }

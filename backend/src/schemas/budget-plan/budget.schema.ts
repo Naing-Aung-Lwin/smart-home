@@ -11,6 +11,9 @@ export class Budget extends Document {
 
   @Prop({ default: 0 })
   totalExpense: number;
+
+  @Prop({ default: 0 })
+  totalSaving: number;
 }
 
 export const BudgetSchema = SchemaFactory.createForClass(Budget);

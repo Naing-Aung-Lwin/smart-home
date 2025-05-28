@@ -34,6 +34,14 @@ export class CreateBudgetDto {
     description: 'Total expense',
   })
   totalExpense?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @ApiProperty({
+    example: '5000',
+    description: 'Total expense',
+  })
+  totalSaving?: number;
 }
 
 export class UpdateBudgetDto {
@@ -63,6 +71,14 @@ export class UpdateBudgetDto {
     description: 'Total expense',
   })
   totalExpense: number;
+
+  @IsNumber()
+  @IsOptional()
+  @ApiProperty({
+    example: '5000',
+    description: 'Total expense',
+  })
+  totalSaving?: number;
 }
 
 export class SearchBudgetDto {

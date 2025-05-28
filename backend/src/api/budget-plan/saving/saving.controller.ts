@@ -8,10 +8,12 @@ import {
   Body,
   UsePipes,
   ValidationPipe,
+  Query,
 } from '@nestjs/common';
 import { SavingService } from './saving.service';
 import {
   CreateSavingDto,
+  FilterSavingDto,
   UpdateSavingDto,
 } from 'src/dtos/budget-plan/saving.dto';
 import { ApiTags, ApiParam } from '@nestjs/swagger';
@@ -29,8 +31,8 @@ export class SavingController {
   }
 
   @Get()
-  findAll() {
-    return this.service.findAll();
+  findAll(@Query() query: FilterSavingDto) {
+    return this.service.findAll(query);
   }
 
   @Get(':id')
