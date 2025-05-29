@@ -5,6 +5,7 @@ import BudgetPage from "../components/Money/BudgetPage";
 import IncomePage from "../components/Money/IncomePage";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../constants/theme";
+import SavingPage from "../components/Money/SavingPage";
 
 const Tab = createBottomTabNavigator();
 
@@ -18,6 +19,7 @@ export default function MainMenuPage() {
           if (route.name === "income") iconName = "cash";
           else if (route.name === "budget") iconName = "wallet";
           else if (route.name === "expense") iconName = "card";
+          else if (route.name === "saving") iconName = "save";
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
@@ -47,6 +49,11 @@ export default function MainMenuPage() {
       <Tab.Screen
         name="expense"
         component={ExpensePage}
+        options={{ headerShown: false }}
+      />
+      <Tab.Screen
+        name="saving"
+        component={SavingPage}
         options={{ headerShown: false }}
       />
       <Tab.Screen

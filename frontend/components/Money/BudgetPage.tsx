@@ -16,6 +16,7 @@ interface Budget {
   month: string;
   totalIncome: number;
   totalExpense: number;
+  totalSaving: number;
 }
 
 const months = [
@@ -129,6 +130,13 @@ const BudgetPage: React.FC = () => {
             <Text style={styles.label}>Total Income</Text>
             <Text style={[styles.amount, { color: "#16A34A" }]}>
               + {budgets.totalIncome} MMK
+            </Text>
+          </View>
+
+          <View style={styles.card}>
+            <Text style={styles.label}>Total Saving</Text>
+            <Text style={[styles.amount, { color: "#DC2626" }]}>
+              - {budgets.totalSaving} MMK
             </Text>
           </View>
 
