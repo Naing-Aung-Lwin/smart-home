@@ -58,6 +58,7 @@ export default function MenuPage() {
         console.error("Failed to generate menu:", error);
       } finally {
         setAdding(false);
+        setModalVisible(false);
       }
     } else {
       setError({
