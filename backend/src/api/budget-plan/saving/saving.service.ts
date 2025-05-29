@@ -79,6 +79,14 @@ export class SavingService {
   }
 
   async delete(id: string) {
+    const saving = await this.model.findById(id).exec();
+    const budgetId = saving?.budgetId;
+    if (budgetId) {
+      const budget = await this.budgetModel.findById(budgetId).exec();
+      if (!budget) throw new NotFoundException('Budget not found');
+      budget.totalSaving -= saving.amount;
+      await budget.save();
+    }
     const deleted = await this.model.findByIdAndDelete(id).exec();
     if (!deleted) throw new NotFoundException('Saving not found');
   }
