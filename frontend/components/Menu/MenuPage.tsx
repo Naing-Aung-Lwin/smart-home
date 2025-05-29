@@ -66,7 +66,10 @@ export default function MenuPage() {
     if (!!formData.meal && !!formData.vegetable) {
       try {
         setLoading(true);
-        await api.post("/menu", formData);
+        await api.post("/menu", {
+          meal: formData.meal,
+          vegetable: formData.vegetable,
+        });
         fetchMenu();
         setFormData({
           _id: "",
@@ -100,7 +103,10 @@ export default function MenuPage() {
         if (isUpdate) {
           await api.put(`/menu/${formData._id}`, formData);
         } else {
-          await api.post("/menu", formData);
+          await api.post("/menu", {
+            meal: formData.meal,
+            vegetable: formData.vegetable,
+          });
         }
         fetchMenu();
         setFormData({
