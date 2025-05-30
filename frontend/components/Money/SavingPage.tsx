@@ -118,6 +118,7 @@ const SavingPage: React.FC = () => {
   };
 
   useEffect(() => {
+    fetchBudget();
     fetchSaving();
   }, []);
 
@@ -280,20 +281,6 @@ const SavingPage: React.FC = () => {
     return `${year}:${month}:${day} ${hours}:${minutes}:${seconds}`;
   };
 
-  useEffect(() => {
-    if (saveFromIncome && date) {
-      fetchBudget();
-    } else {
-      setBudgets({
-        _id: "",
-        month: "",
-        totalIncome: 0,
-        totalSaving: 0,
-        totalExpense: 0,
-      });
-    }
-  }, [date, saveFromIncome]);
-
   const fetchBudget = async () => {
     setLoading(true);
     try {
@@ -304,6 +291,13 @@ const SavingPage: React.FC = () => {
       } else {
         setSaving([]);
         setTotalSaving(0);
+        setBudgets({
+          _id: "",
+          month: "",
+          totalIncome: 0,
+          totalSaving: 0,
+          totalExpense: 0,
+        });
       }
     } catch (error) {
       console.error("Failed to fetch budget", error);
