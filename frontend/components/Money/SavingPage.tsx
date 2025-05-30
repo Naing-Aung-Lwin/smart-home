@@ -169,16 +169,24 @@ const SavingPage: React.FC = () => {
     if (
       !description ||
       !amount ||
-      (budgets && budgets._id && budgets.totalIncome > Number(amount))
+      (budgets &&
+        budgets.totalIncome > 0 &&
+        budgets.totalIncome < Number(amount))
     )
       return;
 
     setLoading(true);
-    const payload = {
+    let payload: {
+      description: string;
+      amount: number;
+      date: string;
+      budgetId?: string;
+    } = {
       description: description,
       amount: Number(amount),
       date: date.toISOString(),
     };
+    if (budgets && budgets._id) payload.budgetId = budgets._id;
     try {
       const response = await api.post("/saving", payload);
 
@@ -186,6 +194,7 @@ const SavingPage: React.FC = () => {
         setAmount("");
         setDescription("");
         fetchSaving();
+        setSaveFromIncome(false);
       }
       setModalVisible(false);
       setLoading(false);
@@ -199,7 +208,9 @@ const SavingPage: React.FC = () => {
     if (
       !description ||
       !amount ||
-      (budgets && budgets._id && budgets.totalIncome > Number(amount))
+      (budgets &&
+        budgets.totalIncome > 0 &&
+        budgets.totalIncome < Number(amount))
     )
       return;
     setLoading(true);
@@ -220,6 +231,7 @@ const SavingPage: React.FC = () => {
       if (response) {
         setAmount("");
         setDescription("");
+        setSaveFromIncome(false);
         fetchSaving();
       }
       setModalVisible(false);
@@ -468,9 +480,13 @@ const SavingPage: React.FC = () => {
                   <Text style={styles.checkboxLabel}>Save From Income</Text>
                 </TouchableOpacity>
                 {saveFromIncome && (
-                  <Text style={styles.incomeLabel}>
-                    Current Income: {budgets?.totalIncome}
-                  </Text>
+                  <>
+                    <Text style={styles.incomeLabel}>
+                      Saving: {budgets?.totalSaving} &nbsp; &nbsp;Expense:{" "}
+                      {budgets?.totalExpense} &nbsp; &nbsp; Income:{" "}
+                      {budgets?.totalIncome}
+                    </Text>
+                  </>
                 )}
               </View>
 
