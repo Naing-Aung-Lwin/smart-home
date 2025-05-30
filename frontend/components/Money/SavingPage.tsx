@@ -18,15 +18,19 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 
-interface Category {
-  _id: string;
-  name: string;
-}
 interface Saving {
   _id: string;
   amount: number;
   date: string;
   description: string;
+}
+
+interface Budget {
+  _id: string;
+  month: string;
+  totalIncome: number;
+  totalSaving: number;
+  totalExpense: number;
 }
 
 const SavingPage: React.FC = () => {
@@ -49,6 +53,7 @@ const SavingPage: React.FC = () => {
 
   const [loading, setLoading] = useState(false);
 
+  const [saveFromIncome, setSaveFromIncome] = useState(false);
   const [confirmModal, setConfirmModal] = useState(false);
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
@@ -64,6 +69,14 @@ const SavingPage: React.FC = () => {
   const [fromDate, setFromDate] = useState(getCurrentMonthRange().fromDate);
   const [toDate, setToDate] = useState(getCurrentMonthRange().toDate);
   const [modalVisible, setModalVisible] = useState(false);
+
+  const [budgets, setBudgets] = useState<Budget>({
+    _id: "",
+    month: "",
+    totalIncome: 0,
+    totalSaving: 0,
+    totalExpense: 0,
+  });
 
   const onChangeFromDate = (
     _event: DateTimePickerEvent,
@@ -153,7 +166,12 @@ const SavingPage: React.FC = () => {
   };
 
   const handleAddSaving = async () => {
-    if (!description || !amount) return;
+    if (
+      !description ||
+      !amount ||
+      (budgets && budgets._id && budgets.totalIncome > Number(amount))
+    )
+      return;
 
     setLoading(true);
     const payload = {
@@ -178,13 +196,24 @@ const SavingPage: React.FC = () => {
   };
 
   const handleUpdateSaving = async () => {
-    if (!description || !amount) return;
+    if (
+      !description ||
+      !amount ||
+      (budgets && budgets._id && budgets.totalIncome > Number(amount))
+    )
+      return;
     setLoading(true);
-    const payload = {
+    let payload: {
+      description: string;
+      amount: number;
+      date: string;
+      budgetId?: string;
+    } = {
       description: description,
       amount: Number(amount),
       date: date.toISOString(),
     };
+    if (budgets && budgets._id) payload.budgetId = budgets._id;
     try {
       const response = await api.put(`/saving/${selectedId}`, payload);
 
@@ -199,7 +228,6 @@ const SavingPage: React.FC = () => {
     }
     setLoading(false);
   };
-
   const handleDelete = async () => {
     setLoading(true);
     try {
@@ -238,6 +266,37 @@ const SavingPage: React.FC = () => {
     const seconds = pad(date.getSeconds());
 
     return `${year}:${month}:${day} ${hours}:${minutes}:${seconds}`;
+  };
+
+  useEffect(() => {
+    if (saveFromIncome && date) {
+      fetchBudget();
+    } else {
+      setBudgets({
+        _id: "",
+        month: "",
+        totalIncome: 0,
+        totalSaving: 0,
+        totalExpense: 0,
+      });
+    }
+  }, [date, saveFromIncome]);
+
+  const fetchBudget = async () => {
+    setLoading(true);
+    try {
+      const formattedDate = new Date(date).toISOString().slice(0, 7);
+      const response = await api.get(`/budget?month=${formattedDate}`);
+      if (response.data && response.data.length > 0) {
+        setBudgets(response.data[0]);
+      } else {
+        setSaving([]);
+        setTotalSaving(0);
+      }
+    } catch (error) {
+      console.error("Failed to fetch budget", error);
+    }
+    setLoading(false);
   };
 
   return (
@@ -356,6 +415,13 @@ const SavingPage: React.FC = () => {
                 keyboardType="numeric"
                 inputMode="numeric"
               />
+              {budgets &&
+              budgets.totalIncome &&
+              budgets.totalIncome < Number(amount) ? (
+                <Text style={styles.errorText}>
+                  Saving is greater than your income
+                </Text>
+              ) : null}
               <TextInput
                 value={description}
                 onChangeText={setDescription}
@@ -390,6 +456,23 @@ const SavingPage: React.FC = () => {
                   onChange={onTimeChange}
                 />
               )}
+
+              <View style={styles.checkboxGroup}>
+                <TouchableOpacity
+                  style={styles.checkboxButton}
+                  onPress={() => setSaveFromIncome(!saveFromIncome)}
+                >
+                  <View style={styles.checkboxOuter}>
+                    <View style={saveFromIncome && styles.checkboxInner} />
+                  </View>
+                  <Text style={styles.checkboxLabel}>Save From Income</Text>
+                </TouchableOpacity>
+                {saveFromIncome && (
+                  <Text style={styles.incomeLabel}>
+                    Current Income: {budgets?.totalIncome}
+                  </Text>
+                )}
+              </View>
 
               <View style={styles.buttonRow}>
                 <TouchableOpacity
@@ -560,6 +643,39 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: Colors.white,
     fontSize: Fonts.size.button,
+  },
+
+  checkboxGroup: {
+    flexDirection: "column",
+    gap: 10,
+  },
+  checkboxButton: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  checkboxOuter: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderColor: "#555",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 10,
+  },
+  checkboxInner: {
+    width: 12,
+    height: 12,
+    backgroundColor: "#555",
+  },
+  checkboxLabel: {
+    fontSize: 16,
+  },
+  incomeLabel: {
+    color: Colors.primary,
+    fontWeight: "bold",
+  },
+  errorText: {
+    color: Colors.danger,
   },
 });
 
