@@ -27,7 +27,7 @@ export default function Common() {
     const minutes = pad(date.getMinutes());
     const seconds = pad(date.getSeconds());
 
-    return `${year}:${month}:${day} ${hours}:${minutes}:${seconds}`;
+    return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
   }
 
   return {

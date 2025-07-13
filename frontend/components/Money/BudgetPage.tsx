@@ -47,6 +47,7 @@ const BudgetPage: React.FC = () => {
     month: "",
     totalIncome: 0,
     totalExpense: 0,
+    totalSaving: 0,
   });
   const today = new Date();
   const currentMonth = today.toLocaleString("default", { month: "long" }); // e.g., "May"
@@ -68,6 +69,10 @@ const BudgetPage: React.FC = () => {
   useFocusEffect(
     React.useCallback(() => {
       fetchBudget();
+      return () => {
+        setSelectedMonth(currentMonth);
+        setSelectedYear(currentYear);
+      };
     }, [])
   );
 
@@ -79,7 +84,7 @@ const BudgetPage: React.FC = () => {
       if (response.data && response.data.length > 0) {
         setBudgets(response.data[0]);
       } else {
-        setBudgets({ _id: "", month: "", totalIncome: 0, totalExpense: 0 });
+        setBudgets({ _id: "", month: "", totalIncome: 0, totalExpense: 0, totalSaving: 0 });
       }
     } catch (error) {
       console.error("Failed to fetch budget", error);

@@ -17,6 +17,7 @@ import ConfirmModalBox from "../common/ConfirmModalBox";
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
+import { useFocusEffect } from "@react-navigation/native";
 
 interface Saving {
   _id: string;
@@ -116,6 +117,19 @@ const SavingPage: React.FC = () => {
     }
     setLoading(false);
   };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      return () => {
+        setFromDate(getCurrentMonthRange().fromDate);
+        setToDate(getCurrentMonthRange().fromDate);
+        setDate(new Date());
+        setSaveFromIncome(false);
+        setAmount('');
+        setDescription('')
+      };
+    }, [])
+  );
 
   useEffect(() => {
     fetchBudget();

@@ -13,11 +13,13 @@ import {
   ActivityIndicator,
   Modal,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { Colors, Fonts } from "../../constants/theme";
 import ConfirmModalBox from "../common/ConfirmModalBox";
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
+import commonMixin from "../../composable/common";
 
 interface Category {
   _id: string;
@@ -142,8 +144,7 @@ const IncomePage: React.FC = () => {
       }
       setModalVisible(false);
       setLoading(false);
-    } catch (error) {
-      console.error("Error adding income:", error);
+    } catch {
       setLoading(false);
     }
   };
@@ -159,6 +160,18 @@ const IncomePage: React.FC = () => {
     );
     return monthIndex + 1 < 10 ? `0${monthIndex + 1}` : `${monthIndex + 1}`;
   };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      return () => {
+        setSelectedMonth(currentMonth);
+        setSelectedYear(currentYear);
+        setDate(new Date());
+        setAmount("");
+        setDescription("");
+      };
+    }, [])
+  );
 
   useEffect(() => {
     fetchBudget();
@@ -218,18 +231,7 @@ const IncomePage: React.FC = () => {
     setModalVisible(true);
   };
 
-  function formatDate(date: Date) {
-    const pad = (n: number) => n.toString().padStart(2, "0");
-
-    const year = date.getFullYear();
-    const month = pad(date.getMonth() + 1);
-    const day = pad(date.getDate());
-    const hours = pad(date.getHours());
-    const minutes = pad(date.getMinutes());
-    const seconds = pad(date.getSeconds());
-
-    return `${year}:${month}:${day} ${hours}:${minutes}:${seconds}`;
-  }
+  const { formatDate } = commonMixin();
 
   const onChangeDate = (
     event: DateTimePickerEvent,

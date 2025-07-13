@@ -19,6 +19,7 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import commonMixin from "../../composable/common";
+import { useFocusEffect } from "@react-navigation/native";
 interface Category {
   _id: string;
   name: string;
@@ -116,6 +117,18 @@ const ExpensePage: React.FC = () => {
   useEffect(() => {
     if (budgets._id) fetchExpenses();
   }, [budgets]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      return () => {
+        setSelectedMonth(currentMonth);
+        setSelectedYear(currentYear);
+        setDate(new Date())
+        setAmount('');
+        setReason('')
+      };
+    }, [])
+  );
 
   const fetchExpenses = async () => {
     try {
