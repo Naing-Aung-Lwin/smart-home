@@ -12,7 +12,7 @@ import {
 import { Colors, Fonts } from "../../constants/theme";
 import api from "../../api/axios";
 import commonMixin from "../../composable/common";
-import ChooseMealBox from "./ChooseMealBox";
+import ConfirmModalBox from "../common/ConfirmModalBox";
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
@@ -46,7 +46,6 @@ export default function WeeklyMenuScreen() {
   const [showToDate, setShowToDate] = useState(false);
   const [fromDate, setFromDate] = useState(getCurrentWeekRange().start);
   const [toDate, setToDate] = useState(getCurrentWeekRange().end);
-  const [selectedMenu, setSelectedMenu] = useState<MealPlan | null>(null);
 
   function getCurrentWeekRange() {
     const today = new Date();
@@ -124,7 +123,7 @@ export default function WeeklyMenuScreen() {
   useEffect(() => {
     fetchMenuList();
     fetchWeeklyMenuList();
-  }, []);
+  }, [fromDate, toDate]);
 
   const handleRegenerate = async (id: string) => {
     setLoading(true);
@@ -143,10 +142,23 @@ export default function WeeklyMenuScreen() {
     }
   };
 
-  const handleUpdate = async (data: MealPlan) => {
-    setRegenrateDate(data.date);
-    setModalVisible(true);
-    setSelectedMenu(data);
+  const [selectedId, setSelectedId] = useState<string>("");
+  const [confirmModal, setConfirmModal] = useState(false);
+  const deleteFunc = (id: string) => {
+    setSelectedId(id);
+    setConfirmModal(true);
+  };
+
+  const handleDelete = async () => {
+    try {
+      await api.delete(`/meal-plan/${selectedId}`);
+      fetchWeeklyMenuList();
+    } catch (error) {
+      console.error("Error deleting menu:", error);
+    } finally {
+      setSelectedId("");
+      setConfirmModal(false);
+    }
   };
 
   const onChangeFromDate = (
@@ -250,10 +262,10 @@ export default function WeeklyMenuScreen() {
                 </Text>
 
                 <TouchableOpacity
-                  onPress={() => handleUpdate(item)}
+                  onPress={() => deleteFunc(item.date)}
                   style={styles.editButton}
                 >
-                  <Text style={styles.iconText}>✏️</Text>
+                  <Text style={styles.deleteIcon}>🗑️</Text>
                 </TouchableOpacity>
               </View>
               {item.menus.map((menu, index) => {
@@ -268,12 +280,11 @@ export default function WeeklyMenuScreen() {
           )}
         />
       )}
-      <ChooseMealBox
-        modalVisible={modalVisible}
-        setModalVisible={setModalVisible}
+      <ConfirmModalBox
+        isModalVisible={confirmModal}
+        setIsModalVisible={setConfirmModal}
         isLoading={loading}
-        handleRegenerate={handleRegenerate}
-        selectedMenu={selectedMenu}
+        handleSubmit={handleDelete}
       />
     </View>
   );
@@ -335,9 +346,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 8,
   },
-  iconText: {
-    color: "#fff",
-    fontWeight: "600",
+  deleteIcon: {
+    fontSize: 18,
+    color: Colors.danger,
   },
   day: {
     fontSize: Fonts.size.subTitle,

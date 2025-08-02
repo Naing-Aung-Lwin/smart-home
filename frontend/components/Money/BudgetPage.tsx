@@ -138,12 +138,12 @@ const BudgetPage: React.FC = () => {
             </Text>
           </View>
 
-          <View style={styles.card}>
+          {/* <View style={styles.card}>
             <Text style={styles.label}>Total Saving</Text>
             <Text style={[styles.amount, { color: "#DC2626" }]}>
               - {budgets.totalSaving} MMK
             </Text>
-          </View>
+          </View> */}
 
           <View style={styles.card}>
             <Text style={styles.label}>Total Expenses</Text>

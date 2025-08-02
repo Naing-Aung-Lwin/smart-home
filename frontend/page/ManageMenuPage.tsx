@@ -1,7 +1,7 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import WeeklyMenuPage from "../components/Menu/WeeklyMenuPage";
-import MenuPage from "../components/Menu/MenuPage";
+// import MenuPage from "../components/Menu/MenuPage";
 import CurryPage from "../components/Menu/CurryPage";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../constants/theme";
@@ -17,7 +17,7 @@ export default function MainMenuPage() {
 
           if (route.name === "Weekly Menu") iconName = "restaurant";
           else if (route.name === "Recipes") iconName = "book";
-          else if (route.name === "Menu List") iconName = "menu";
+          // else if (route.name === "Menu List") iconName = "menu";
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
@@ -44,11 +44,11 @@ export default function MainMenuPage() {
         component={WeeklyMenuPage}
         options={{ headerShown: false }}
       />
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Menu List"
         component={MenuPage}
         options={{ headerShown: false }}
-      />
+      /> */}
       <Tab.Screen
         name="Curry List"
         component={CurryPage}

@@ -14,7 +14,6 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Colors, Fonts } from "../../constants/theme";
-import ConfirmModalBox from "../common/ConfirmModalBox";
 
 type Menu = {
   _id: string;
@@ -25,7 +24,6 @@ type Menu = {
 export default function MenuPage() {
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const [confirmModal, setConfirmModal] = useState(false);
   const [searchName, setSearchName] = useState<string>("");
   const [searchType, setSearchType] = useState<string>("");
   const [selectedId, setSelectedId] = useState<string>("");
@@ -44,7 +42,12 @@ export default function MenuPage() {
     if (formData && !!formData.name.trim() && !!formData.type.trim()) {
       try {
         setAdding(true);
-        await api.post("/curry", formData);
+        console.log(selectedId, 'selected id')
+        if (selectedId) {
+          await api.put(`/curry/${selectedId}`, formData);
+        } else {
+          await api.post("/curry", formData);
+        }
         fetchMenu();
         setFormData({
           name: "",
@@ -54,6 +57,7 @@ export default function MenuPage() {
           name: "",
           type: "",
         });
+        setSelectedId("");
       } catch (error) {
         console.error("Failed to generate menu:", error);
       } finally {
@@ -73,8 +77,8 @@ export default function MenuPage() {
         <Text style={styles.menuName}>{item.name}</Text>
         <Text style={styles.typeName}>{item.type}</Text>
       </View>
-      <TouchableOpacity onPress={() => deleteFunc(item._id)}>
-        <Text style={styles.deleteIcon}>🗑️</Text>
+      <TouchableOpacity onPress={() => updateFunc(item)}>
+        <Text style={styles.deleteIcon}>✏️</Text>
       </TouchableOpacity>
     </View>
   );
@@ -112,21 +116,11 @@ export default function MenuPage() {
     ...typeOptions.map((type) => ({ key: type, value: type })),
   ];
 
-  const handleDelete = async () => {
-    try {
-      await api.delete(`/curry/${selectedId}`);
-      fetchMenu();
-    } catch (error) {
-      console.error("Error deleting menu:", error);
-    } finally {
-      setSelectedId("");
-      setConfirmModal(false);
-    }
-  };
-
-  const deleteFunc = (id: string) => {
-    setSelectedId(id);
-    setConfirmModal(true);
+  const updateFunc = async (data: Menu) => {
+    setFormData({ ...formData, name: data.name, type: data.type });
+    setError({ name: "", type: "" });
+    setModalVisible(true);
+    setSelectedId(data._id);
   };
 
   const onSearch = () => {
@@ -203,12 +197,6 @@ export default function MenuPage() {
           />
         )}
       </KeyboardAvoidingView>
-      <ConfirmModalBox
-        isModalVisible={confirmModal}
-        setIsModalVisible={setConfirmModal}
-        isLoading={loading}
-        handleSubmit={handleDelete}
-      />
 
       <Modal
         animationType="slide"

@@ -134,7 +134,7 @@ const SavingPage: React.FC = () => {
   useEffect(() => {
     fetchBudget();
     fetchSaving();
-  }, []);
+  }, [fromDate, toDate]);
 
   const onChangeDate = (
     event: DateTimePickerEvent,
