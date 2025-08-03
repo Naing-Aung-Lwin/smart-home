@@ -3,7 +3,7 @@ import { Document, Types } from 'mongoose';
 
 @Schema({ timestamps: true })
 export class CashFlow extends Document {
-  @Prop({ type: Types.ObjectId, required: true })
+  @Prop({ type: Types.ObjectId, required: false })
   categoryId: Types.ObjectId;
 
   @Prop({
@@ -15,6 +15,9 @@ export class CashFlow extends Document {
 
   @Prop({ required: true })
   amount: number;
+
+  @Prop({ required: true })
+  description: string;
 
   @Prop({ required: true })
   date: string;

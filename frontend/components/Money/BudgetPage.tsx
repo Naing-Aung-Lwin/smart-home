@@ -10,6 +10,7 @@ import { Colors, Fonts } from "../../constants/theme";
 import api from "../../api/axios";
 import { Picker } from "@react-native-picker/picker";
 import { useFocusEffect } from "@react-navigation/native";
+import commonMixin from "../../composable/common";
 
 interface Budget {
   _id: string;
@@ -41,6 +42,7 @@ const years = [
 ];
 
 const BudgetPage: React.FC = () => {
+  const { formatMoney } = commonMixin();
   const [loading, setLoading] = useState(false);
   const [budgets, setBudgets] = useState<Budget>({
     _id: "",
@@ -134,21 +136,21 @@ const BudgetPage: React.FC = () => {
           <View style={styles.card}>
             <Text style={styles.label}>Total Income</Text>
             <Text style={[styles.amount, { color: "#16A34A" }]}>
-              + {budgets.totalIncome} MMK
+              + {formatMoney(budgets.totalIncome)} MMK
             </Text>
           </View>
 
-          {/* <View style={styles.card}>
+          <View style={styles.card}>
             <Text style={styles.label}>Total Saving</Text>
             <Text style={[styles.amount, { color: "#DC2626" }]}>
-              - {budgets.totalSaving} MMK
+              - {formatMoney(budgets.totalSaving)} MMK
             </Text>
-          </View> */}
+          </View>
 
           <View style={styles.card}>
             <Text style={styles.label}>Total Expenses</Text>
             <Text style={[styles.amount, { color: "#DC2626" }]}>
-              - {budgets.totalExpense} MMK
+              - {formatMoney(budgets.totalExpense)} MMK
             </Text>
           </View>
 
@@ -159,14 +161,14 @@ const BudgetPage: React.FC = () => {
                 styles.amount,
                 {
                   color:
-                    budgets.totalIncome - budgets.totalExpense >= 0
+                    budgets.totalIncome - budgets.totalExpense -budgets.totalSaving >= 0
                       ? "#0F766E"
                       : "#DC2626",
                 },
               ]}
             >
-              {budgets.totalIncome - budgets.totalExpense >= 0 ? "+ " : "- "}
-              {Math.abs(budgets.totalIncome - budgets.totalExpense)} MMK
+              {budgets.totalIncome - budgets.totalSaving - budgets.totalExpense >= 0 ? "+ " : "- "}
+              {formatMoney(Math.abs(budgets.totalIncome  - budgets.totalSaving - budgets.totalExpense))} MMK
             </Text>
           </View>
         </>

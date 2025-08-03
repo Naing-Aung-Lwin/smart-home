@@ -18,12 +18,14 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import { useFocusEffect } from "@react-navigation/native";
+import commonMixin from "../../composable/common";
 
 interface Saving {
   _id: string;
   amount: number;
   date: string;
   description: string;
+  budgetId?: string;
 }
 
 interface Budget {
@@ -35,22 +37,7 @@ interface Budget {
 }
 
 const SavingPage: React.FC = () => {
-  const getCurrentMonthRange = () => {
-    const now = new Date();
-
-    const year = now.getFullYear();
-    const month = now.getMonth();
-
-    const fromDate = new Date(year, month, 1);
-    const toDate = new Date(year, month + 1, 0);
-
-    const format = (date: Date) => date.toISOString().split("T")[0];
-
-    return {
-      fromDate: format(fromDate),
-      toDate: format(toDate),
-    };
-  };
+  const { formatMoney } = commonMixin();
 
   const [loading, setLoading] = useState(false);
 
@@ -65,10 +52,6 @@ const SavingPage: React.FC = () => {
   const [selectedId, setSelectedId] = useState<string>("");
   const [saving, setSaving] = useState<Saving[]>([]);
   const [totalSaving, setTotalSaving] = useState<number>(0);
-  const [showFromDate, setShowFromDate] = useState(false);
-  const [showToDate, setShowToDate] = useState(false);
-  const [fromDate, setFromDate] = useState(getCurrentMonthRange().fromDate);
-  const [toDate, setToDate] = useState(getCurrentMonthRange().toDate);
   const [modalVisible, setModalVisible] = useState(false);
 
   const [budgets, setBudgets] = useState<Budget>({
@@ -79,32 +62,10 @@ const SavingPage: React.FC = () => {
     totalExpense: 0,
   });
 
-  const onChangeFromDate = (
-    _event: DateTimePickerEvent,
-    selectedDate: Date | undefined
-  ) => {
-    setShowFromDate(Platform.OS === "ios");
-    if (selectedDate) {
-      setFromDate(selectedDate.toISOString().split("T")[0]);
-    }
-  };
-
-  const onChangeToDate = (
-    _event: DateTimePickerEvent,
-    selectedDate: Date | undefined
-  ) => {
-    setShowToDate(Platform.OS === "ios");
-    if (selectedDate) {
-      setToDate(selectedDate.toISOString().split("T")[0]);
-    }
-  };
-
   const fetchSaving = async () => {
     setLoading(true);
     try {
-      const response = await api.get(
-        `/saving?fromDate=${fromDate}&toDate=${toDate}`
-      );
+      const response = await api.get(`/saving`);
       setSaving(response.data);
       setTotalSaving(
         response.data.reduce(
@@ -121,20 +82,21 @@ const SavingPage: React.FC = () => {
   useFocusEffect(
     React.useCallback(() => {
       return () => {
-        setFromDate(getCurrentMonthRange().fromDate);
-        setToDate(getCurrentMonthRange().fromDate);
         setDate(new Date());
         setSaveFromIncome(false);
-        setAmount('');
-        setDescription('')
+        setAmount("");
+        setDescription("");
       };
     }, [])
   );
 
   useEffect(() => {
-    fetchBudget();
     fetchSaving();
-  }, [fromDate, toDate]);
+  }, []);
+
+  useEffect(() => {
+    fetchBudget();
+  }, [saveFromIncome, date]);
 
   const onChangeDate = (
     event: DateTimePickerEvent,
@@ -181,14 +143,7 @@ const SavingPage: React.FC = () => {
   };
 
   const handleAddSaving = async () => {
-    if (
-      !description ||
-      !amount ||
-      (budgets &&
-        budgets.totalIncome > 0 &&
-        budgets.totalIncome < Number(amount))
-    )
-      return;
+    if (!description || !amount) return;
 
     setLoading(true);
     let payload: {
@@ -201,7 +156,18 @@ const SavingPage: React.FC = () => {
       amount: Number(amount),
       date: date.toISOString(),
     };
-    if (budgets && budgets._id) payload.budgetId = budgets._id;
+    if (saveFromIncome) {
+      if (!budgets || !budgets._id) {
+        setLoading(false);
+        return;
+      }
+      const available = calculateAvailableSaving(budgets);
+      if (available < Number(amount)) {
+        setLoading(false);
+        return;
+      }
+      payload.budgetId = budgets._id;
+    }
     try {
       const response = await api.post("/saving", payload);
 
@@ -220,14 +186,7 @@ const SavingPage: React.FC = () => {
   };
 
   const handleUpdateSaving = async () => {
-    if (
-      !description ||
-      !amount ||
-      (budgets &&
-        budgets.totalIncome > 0 &&
-        budgets.totalIncome < Number(amount))
-    )
-      return;
+    if (!description || !amount) return;
     setLoading(true);
     let payload: {
       description: string;
@@ -239,7 +198,18 @@ const SavingPage: React.FC = () => {
       amount: Number(amount),
       date: date.toISOString(),
     };
-    if (budgets && budgets._id) payload.budgetId = budgets._id;
+    if (saveFromIncome) {
+      if (!budgets || !budgets._id) {
+        setLoading(false);
+        return;
+      }
+      const available = calculateAvailableSaving(budgets);
+      if (available < Number(amount)) {
+        setLoading(false);
+        return;
+      }
+      payload.budgetId = budgets._id;
+    }
     try {
       const response = await api.put(`/saving/${selectedId}`, payload);
 
@@ -274,6 +244,10 @@ const SavingPage: React.FC = () => {
     setDescription(data.description);
     setSelectedId(data._id);
     setModalVisible(true);
+    if (data?.budgetId) {
+      setSaveFromIncome(true);
+      fetchBudget();
+    }
   };
 
   const deleteFunc = (id: string) => {
@@ -319,64 +293,22 @@ const SavingPage: React.FC = () => {
     setLoading(false);
   };
 
+  const calculateAvailableSaving = (budgets: Budget) => {
+    if (!budgets || !budgets.totalIncome) return 0;
+    return budgets.totalIncome - budgets.totalSaving - budgets.totalExpense;
+  };
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       style={styles.container}
     >
-      <View style={styles.filterContainer}>
-        <View style={styles.pickerWrapper}>
-          <Text style={styles.filterLabel}>From</Text>
-          <TouchableOpacity
-            style={[styles.input, { justifyContent: "center" }]}
-            onPress={() => setShowFromDate(true)}
-          >
-            <Text style={{ color: "#1F2937" }}>
-              {fromDate ? fromDate.toString().slice(0, 10) : "Select Date"}
-            </Text>
-          </TouchableOpacity>
-          {showFromDate && (
-            <DateTimePicker
-              value={fromDate ? new Date(fromDate) : new Date()}
-              mode="date"
-              display="default"
-              onChange={(event, date) => {
-                setShowFromDate(false);
-                if (date) onChangeFromDate(event, date);
-              }}
-            />
-          )}
-        </View>
-
-        <View style={styles.pickerWrapper}>
-          <Text style={styles.filterLabel}>To</Text>
-          <TouchableOpacity
-            style={[styles.input, { justifyContent: "center" }]}
-            onPress={() => setShowToDate(true)}
-          >
-            <Text style={{ color: "#1F2937" }}>
-              {toDate ? toDate.toString().slice(0, 10) : "Select Date"}
-            </Text>
-          </TouchableOpacity>
-          {showToDate && (
-            <DateTimePicker
-              value={toDate ? new Date(toDate) : new Date()}
-              mode="date"
-              display="default"
-              onChange={(event, date) => {
-                setShowToDate(false);
-                if (date) onChangeToDate(event, date);
-              }}
-            />
-          )}
-        </View>
-      </View>
       {loading ? (
         <ActivityIndicator size="large" color={Colors.primary} />
       ) : (
         <>
           <View style={styles.summary}>
-            <Text style={styles.summaryText}>Total: {totalSaving} MMK</Text>
+            <Text style={styles.summaryText}>Total: {formatMoney(totalSaving)} MMK</Text>
 
             <TouchableOpacity
               style={[styles.actionButton, styles.addNewButton]}
@@ -392,11 +324,16 @@ const SavingPage: React.FC = () => {
             renderItem={({ item }) => (
               <View style={styles.savingItem}>
                 <View style={styles.savingInfo}>
-                  <Text style={styles.savingAmount}>+{item.amount} MMK</Text>
+                  <Text style={styles.savingAmount}>+{formatMoney(item.amount)} MMK</Text>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.savingDescription}>
                       {item?.description}
                     </Text>
+                    {item?.budgetId &&
+                    <Text style={styles.savingFromIncome}>
+                      (From Income)
+                    </Text>
+                    }
                     <Text style={styles.savingDate}>
                       {item.date && formatDate(item.date)}
                     </Text>
@@ -435,7 +372,8 @@ const SavingPage: React.FC = () => {
                 keyboardType="numeric"
                 inputMode="numeric"
               />
-              {budgets &&
+              {saveFromIncome &&
+              budgets &&
               budgets.totalIncome &&
               budgets.totalIncome < Number(amount) ? (
                 <Text style={styles.errorText}>
@@ -490,9 +428,8 @@ const SavingPage: React.FC = () => {
                 {saveFromIncome && (
                   <>
                     <Text style={styles.incomeLabel}>
-                      Saving: {budgets?.totalSaving} &nbsp; &nbsp;Expense:{" "}
-                      {budgets?.totalExpense} &nbsp; &nbsp; Income:{" "}
-                      {budgets?.totalIncome}
+                      Available for saving: {formatMoney(calculateAvailableSaving(budgets))}{" "}
+                      MMK
                     </Text>
                   </>
                 )}
@@ -501,7 +438,10 @@ const SavingPage: React.FC = () => {
               <View style={styles.buttonRow}>
                 <TouchableOpacity
                   style={[styles.halfButton, styles.cancelButton]}
-                  onPress={() => setModalVisible(false)}
+                  onPress={() => {
+                    setModalVisible(false);
+                    setSaveFromIncome(false);
+                  }}
                 >
                   <Text style={styles.cancelButtonText}>Cancel</Text>
                 </TouchableOpacity>
@@ -600,6 +540,11 @@ const styles = StyleSheet.create({
     fontSize: Fonts.size.subTitle,
     fontWeight: "500",
     color: "#1F2937",
+  },
+  savingFromIncome: {
+    fontSize: Fonts.size.subTitle,
+    fontWeight: "500",
+    color: "#1e53d9ff",
   },
   savingDate: {
     fontSize: Fonts.size.text,

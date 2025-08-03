@@ -30,8 +30,13 @@ export default function Common() {
     return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
   }
 
+  const formatMoney = (number: number) => {
+    return number.toLocaleString();
+  }
+
   return {
     getDayAndCurrentTime,
     formatDate,
+    formatMoney,
   };
 }
