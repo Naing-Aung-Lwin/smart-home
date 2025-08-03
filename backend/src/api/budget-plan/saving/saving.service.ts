@@ -56,26 +56,9 @@ export class SavingService {
 
   async update(id: string, dto: UpdateSavingDto) {
     const existing = await this.model.findById(id).exec();
-    if (!existing) throw new NotFoundException('Saving not found');
-    const budgetId = dto?.budgetId || existing.budgetId;
-    if (budgetId) {
-      const budget = await this.budgetModel.findById(budgetId).exec();
-      if (!budget) throw new NotFoundException('Budget not found');
-      const remainAmount =
-        budget.totalIncome -
-        budget.totalExpense -
-        budget.totalSaving +
-        existing.amount;
-      if (remainAmount < dto.amount) {
-        throw new NotFoundException('Not enough money to save');
-      }
-      budget.totalSaving = budget.totalSaving - existing.amount + dto.amount;
-      await budget.save();
-    }
-    const updated = await this.model
-      .findByIdAndUpdate(id, dto, { new: true })
-      .exec();
-    return updated;
+    const payload = { ...existing, ...dto };
+    await this.delete(id);
+    return this.create(payload);
   }
 
   async delete(id: string) {

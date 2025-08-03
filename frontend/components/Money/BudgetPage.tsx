@@ -138,12 +138,12 @@ const BudgetPage: React.FC = () => {
             </Text>
           </View>
 
-          {/* <View style={styles.card}>
+          <View style={styles.card}>
             <Text style={styles.label}>Total Saving</Text>
             <Text style={[styles.amount, { color: "#DC2626" }]}>
               - {budgets.totalSaving} MMK
             </Text>
-          </View> */}
+          </View>
 
           <View style={styles.card}>
             <Text style={styles.label}>Total Expenses</Text>
@@ -159,14 +159,14 @@ const BudgetPage: React.FC = () => {
                 styles.amount,
                 {
                   color:
-                    budgets.totalIncome - budgets.totalExpense >= 0
+                    budgets.totalIncome - budgets.totalExpense -budgets.totalSaving >= 0
                       ? "#0F766E"
                       : "#DC2626",
                 },
               ]}
             >
-              {budgets.totalIncome - budgets.totalExpense >= 0 ? "+ " : "- "}
-              {Math.abs(budgets.totalIncome - budgets.totalExpense)} MMK
+              {budgets.totalIncome - budgets.totalSaving - budgets.totalExpense >= 0 ? "+ " : "- "}
+              {Math.abs(budgets.totalIncome  - budgets.totalSaving - budgets.totalExpense)} MMK
             </Text>
           </View>
         </>

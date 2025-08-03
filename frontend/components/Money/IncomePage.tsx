@@ -28,6 +28,7 @@ interface Category {
 interface Income {
   _id: string;
   date: string;
+  description: string;
   categoryId: Category;
   categoryType: string;
   amount: number;
@@ -104,7 +105,7 @@ const IncomePage: React.FC = () => {
     if (!description || !amount) return;
     setLoading(true);
     const payload = {
-      category: description,
+      description: description,
       categoryType: "IncomeSource",
       amount: Number(amount),
       date: date.toISOString(),
@@ -129,7 +130,7 @@ const IncomePage: React.FC = () => {
 
     setLoading(true);
     const payload = {
-      category: description,
+      description: description,
       categoryType: "IncomeSource",
       amount: Number(amount),
       date: date.toISOString(),
@@ -214,7 +215,7 @@ const IncomePage: React.FC = () => {
 
   const updateFunc = (data: Income) => {
     setAmount(data.amount.toString());
-    setDescription(data.categoryId.name);
+    setDescription(data.description);
     setSelectedId(data._id);
     setModalVisible(true);
   };
@@ -327,7 +328,7 @@ const IncomePage: React.FC = () => {
                   <Text style={styles.incomeAmount}>+{item.amount} MMK</Text>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.incomeDescription}>
-                      {item?.categoryId?.name}
+                      {item?.description}
                     </Text>
                     <Text style={styles.incomeDate}>
                       {formatDate(new Date(item.date))}

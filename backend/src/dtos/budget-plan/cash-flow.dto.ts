@@ -11,13 +11,6 @@ import {
 
 export class CreateCashFlowDto {
   @IsString()
-  @ApiProperty({
-    example: 'Food',
-    description: 'Category of the expense',
-  })
-  category: string;
-
-  @IsString()
   @IsNotEmpty()
   @ApiProperty({
     example: 'ExpenseCategory',
@@ -34,6 +27,14 @@ export class CreateCashFlowDto {
   })
   amount: number;
 
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({
+    example: 'Food',
+    description: 'Category of the expense',
+  })
+  description: string;
+
   @IsDateString()
   @IsNotEmpty()
   @ApiProperty({
@@ -41,6 +42,14 @@ export class CreateCashFlowDto {
     description: 'Date of the expense',
   })
   date: string;
+
+  @IsMongoId()
+  @IsOptional()
+  @ApiProperty({
+    example: 'ExpenseCategory or IncomeSource ID (MongoDB ObjectId)',
+    description: 'Category associated with the expense or income',
+  })
+  categoryId: string;
 
   @IsOptional()
   @IsMongoId()
@@ -71,7 +80,6 @@ export class UpdateCashFlowDto {
   categoryType: string;
 
   @IsNumber()
-  @IsNotEmpty()
   @IsOptional()
   @ApiProperty({
     example: 50,
@@ -79,14 +87,29 @@ export class UpdateCashFlowDto {
   })
   amount: number;
 
+  @IsString()
+  @IsOptional()
+  @ApiProperty({
+    example: 'Food',
+    description: 'Category of the expense',
+  })
+  description: string;
+
   @IsDateString()
-  @IsNotEmpty()
   @IsOptional()
   @ApiProperty({
     example: '2025-05-05',
     description: 'Date of the expense',
   })
   date: string;
+
+  @IsMongoId()
+  @IsOptional()
+  @ApiProperty({
+    example: 'ExpenseCategory or IncomeSource ID (MongoDB ObjectId)',
+    description: 'Category associated with the expense or income',
+  })
+  categoryId: string;
 
   @IsMongoId()
   @IsOptional()

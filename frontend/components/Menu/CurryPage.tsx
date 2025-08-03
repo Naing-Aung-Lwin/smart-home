@@ -42,7 +42,6 @@ export default function MenuPage() {
     if (formData && !!formData.name.trim() && !!formData.type.trim()) {
       try {
         setAdding(true);
-        console.log(selectedId, 'selected id')
         if (selectedId) {
           await api.put(`/curry/${selectedId}`, formData);
         } else {

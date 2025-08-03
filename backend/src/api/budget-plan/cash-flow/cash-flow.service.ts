@@ -58,15 +58,15 @@ export class CashFlowService {
     created.budgetId = budget._id as Types.ObjectId;
 
     // Handle category
-    const category = await handleCategory(
-      dto.categoryType,
-      dto.category,
-      this.incomeSourceSvc,
-      this.expenseCategorySvc,
-    );
-    if (category) {
-      created.categoryId = category._id as Types.ObjectId;
-    }
+    // const category = await handleCategory(
+    //   dto.categoryType,
+    //   dto.category,
+    //   this.incomeSourceSvc,
+    //   this.expenseCategorySvc,
+    // );
+    // if (category) {
+    //   created.categoryId = category._id as Types.ObjectId;
+    // }
 
     return created.save();
   }
@@ -157,116 +157,4 @@ export class CashFlowService {
     if (!deleted) throw new NotFoundException('Cash flow not found');
     return deleted;
   }
-
-  /*
-  async createBackup(dto: CreateCashFlowDto): Promise<CashFlow> {
-    const created = new this.cashFlowModel({
-      ...dto,
-    });
-    let incomeAmount = dto.amount;
-
-    // Handle saving logic if applicable
-    const saving = await handleSaving(
-      dto,
-      this.savingSvc,
-      created._id as string,
-    );
-    if (saving) {
-      created.savingId = saving._id as Types.ObjectId;
-      created.amount = dto.amount;
-      incomeAmount = dto.amount - saving.amount;
-    }
-
-    // Handle budget update based on the cash flow type
-    const budget = await handleBudget(dto.date, this.budgetSvc);
-    if (dto.categoryType === 'IncomeSource') {
-      const totalIncome = budget.totalIncome + incomeAmount;
-      await updateBudget(
-        budget._id as string,
-        this.budgetSvc,
-        totalIncome,
-        budget.totalExpense,
-        budget.month,
-      );
-    } else {
-      const totalExpense = budget.totalExpense + incomeAmount;
-      await updateBudget(
-        budget._id as string,
-        this.budgetSvc,
-        budget.totalIncome,
-        totalExpense,
-        budget.month,
-      );
-    }
-    created.budgetId = budget._id as Types.ObjectId;
-
-    // Handle category
-    const category = await handleCategory(
-      dto.categoryType,
-      dto.category,
-      this.incomeSourceSvc,
-      this.expenseCategorySvc,
-    );
-    if (category) {
-      created.categoryId = category._id as Types.ObjectId;
-    }
-
-    return created.save();
-  }
-
-  async updateBackup(id: string, dto: UpdateCashFlowDto): Promise<CashFlow> {
-    const current = await this.findById(id);
-
-    // Update Category
-    const categoryType = dto.categoryType
-      ? dto.categoryType
-      : current.categoryType;
-    if (dto.category) {
-      const category = await handleCategory(
-        categoryType,
-        dto.category,
-        this.incomeSourceSvc,
-        this.expenseCategorySvc,
-      );
-      dto.category = category._id as string;
-    }
-
-    // Update Saving
-    const savingId = dto.savingId || (current.savingId as unknown as string);
-    let saving: Saving | null = null;
-    if (savingId) {
-      saving = await this.savingSvc.findById(savingId);
-    }
-    const updatedAmount = await handleUpdateSaving(
-      dto,
-      current,
-      this.savingSvc,
-      id,
-      saving,
-    );
-
-    // Update budget
-    const budgetId = dto.budgetId ? dto.budgetId : String(current.budgetId);
-    const budget = await this.budgetSvc.findById(budgetId);
-    const currentIncomeAmount = current.amount - (saving?.amount || 0);
-    const { totalIncome, totalExpense } = calculateUpdatedBudget(
-      budget,
-      currentIncomeAmount,
-      updatedAmount,
-      categoryType,
-    );
-    await this.budgetSvc.update(budget._id as string, {
-      totalIncome,
-      totalExpense,
-      month: budget.month,
-    });
-
-    // Update cash flow
-    const updated = await this.cashFlowModel
-      .findByIdAndUpdate(id, dto, { new: true })
-      .exec();
-    if (!updated) throw new NotFoundException('Income not found');
-    return updated;
-  }
-  */
 }

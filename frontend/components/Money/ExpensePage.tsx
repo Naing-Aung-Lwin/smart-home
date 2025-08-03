@@ -27,6 +27,7 @@ interface Category {
 interface Expense {
   _id: string;
   date: string;
+  description: string;
   categoryId: Category;
   categoryType: string;
   amount: number;
@@ -154,7 +155,7 @@ const ExpensePage: React.FC = () => {
 
     setLoading(true);
     const payload = {
-      category: reason,
+      description: reason,
       categoryType: "ExpenseCategory",
       amount: Number(amount),
       date: date.toISOString(),
@@ -205,7 +206,7 @@ const ExpensePage: React.FC = () => {
 
     setLoading(true);
     const payload = {
-      category: reason,
+      description: reason,
       categoryType: "ExpenseCategory",
       amount: Number(amount),
       date: date.toISOString(),
@@ -263,7 +264,7 @@ const ExpensePage: React.FC = () => {
 
   const updateFunc = (data: Expense) => {
     setAmount(data.amount.toString());
-    setReason(data.categoryId.name);
+    setReason(data.description);
     setSelectedId(data._id);
     setModalVisible(true);
   };
@@ -329,7 +330,7 @@ const ExpensePage: React.FC = () => {
                   </Text>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.expenseReason}>
-                      {item?.categoryId?.name}
+                      {item?.description}
                     </Text>
                     <Text style={styles.expenseDate}>
                       {formatDate(new Date(item.date))}
