@@ -18,6 +18,7 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import { useFocusEffect } from "@react-navigation/native";
+import commonMixin from "../../composable/common";
 
 interface Saving {
   _id: string;
@@ -36,22 +37,7 @@ interface Budget {
 }
 
 const SavingPage: React.FC = () => {
-  const getCurrentMonthRange = () => {
-    const now = new Date();
-
-    const year = now.getFullYear();
-    const month = now.getMonth();
-
-    const fromDate = new Date(year, month, 1);
-    const toDate = new Date(year, month + 1, 0);
-
-    const format = (date: Date) => date.toISOString().split("T")[0];
-
-    return {
-      fromDate: format(fromDate),
-      toDate: format(toDate),
-    };
-  };
+  const { formatMoney } = commonMixin();
 
   const [loading, setLoading] = useState(false);
 
@@ -322,7 +308,7 @@ const SavingPage: React.FC = () => {
       ) : (
         <>
           <View style={styles.summary}>
-            <Text style={styles.summaryText}>Total: {totalSaving} MMK</Text>
+            <Text style={styles.summaryText}>Total: {formatMoney(totalSaving)} MMK</Text>
 
             <TouchableOpacity
               style={[styles.actionButton, styles.addNewButton]}
@@ -338,11 +324,16 @@ const SavingPage: React.FC = () => {
             renderItem={({ item }) => (
               <View style={styles.savingItem}>
                 <View style={styles.savingInfo}>
-                  <Text style={styles.savingAmount}>+{item.amount} MMK</Text>
+                  <Text style={styles.savingAmount}>+{formatMoney(item.amount)} MMK</Text>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.savingDescription}>
                       {item?.description}
                     </Text>
+                    {item?.budgetId &&
+                    <Text style={styles.savingFromIncome}>
+                      (From Income)
+                    </Text>
+                    }
                     <Text style={styles.savingDate}>
                       {item.date && formatDate(item.date)}
                     </Text>
@@ -437,7 +428,7 @@ const SavingPage: React.FC = () => {
                 {saveFromIncome && (
                   <>
                     <Text style={styles.incomeLabel}>
-                      Available for saving: {calculateAvailableSaving(budgets)}{" "}
+                      Available for saving: {formatMoney(calculateAvailableSaving(budgets))}{" "}
                       MMK
                     </Text>
                   </>
@@ -549,6 +540,11 @@ const styles = StyleSheet.create({
     fontSize: Fonts.size.subTitle,
     fontWeight: "500",
     color: "#1F2937",
+  },
+  savingFromIncome: {
+    fontSize: Fonts.size.subTitle,
+    fontWeight: "500",
+    color: "#1e53d9ff",
   },
   savingDate: {
     fontSize: Fonts.size.text,

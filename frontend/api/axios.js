@@ -2,7 +2,7 @@ import axios from "axios";
 import { Alert } from 'react-native';
 
 const api = axios.create({
-  baseURL: "https://smart-home-production-79e1.up.railway.app",
+  baseURL: "",
   headers: {
     "Content-Type": "application/json",
   },

@@ -232,7 +232,7 @@ const IncomePage: React.FC = () => {
     setModalVisible(true);
   };
 
-  const { formatDate } = commonMixin();
+  const { formatDate, formatMoney } = commonMixin();
 
   const onChangeDate = (
     event: DateTimePickerEvent,
@@ -308,7 +308,7 @@ const IncomePage: React.FC = () => {
       ) : (
         <>
           <View style={styles.summary}>
-            <Text style={styles.summaryText}>Total: {totalIncome} MMK</Text>
+            <Text style={styles.summaryText}>Total: {formatMoney(totalIncome)} MMK</Text>
 
             <TouchableOpacity
               style={[styles.actionButton, styles.addNewButton]}
@@ -325,7 +325,7 @@ const IncomePage: React.FC = () => {
             renderItem={({ item }) => (
               <View style={styles.incomeItem}>
                 <View style={styles.incomeInfo}>
-                  <Text style={styles.incomeAmount}>+{item.amount} MMK</Text>
+                  <Text style={styles.incomeAmount}>+{formatMoney(item.amount)} MMK</Text>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.incomeDescription}>
                       {item?.description}

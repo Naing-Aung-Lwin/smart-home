@@ -92,7 +92,7 @@ const ExpensePage: React.FC = () => {
     return monthIndex + 1 < 10 ? `0${monthIndex + 1}` : `${monthIndex + 1}`;
   };
 
-  const { formatDate } = commonMixin();
+  const { formatDate, formatMoney } = commonMixin();
 
   useEffect(() => {
     fetchBudget();
@@ -308,7 +308,7 @@ const ExpensePage: React.FC = () => {
         <>
           <View style={styles.summary}>
             <Text style={[styles.summaryText, { color: "red" }]}>
-              Total: {totalExpense} MMK
+              Total: {formatMoney(totalExpense)} MMK
             </Text>
 
             <TouchableOpacity
@@ -326,7 +326,7 @@ const ExpensePage: React.FC = () => {
               <View style={styles.expenseItem}>
                 <View style={styles.expenseInfo}>
                   <Text style={[styles.summaryText, { color: "red" }]}>
-                    -{item.amount} MMK
+                    -{formatMoney(item.amount)} MMK
                   </Text>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.expenseReason}>
